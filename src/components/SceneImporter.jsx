@@ -1,9 +1,9 @@
 'use client';
 import React, { useState } from 'react';
 import { FileUp, Upload } from 'lucide-react';
-import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js';
+import { pdfjs } from 'react-pdf';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 const SceneImporter = ({ onScenesImported }) => {
   const [textInput, setTextInput] = useState('');
