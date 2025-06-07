@@ -20,7 +20,18 @@
 }
 
 body {
-  background: var(--background);
+  background: linear-gradient(to bottom right, #fdf6e3, #f9e7cc);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+@media (max-width: 640px) {
+  body {
+    padding: 1rem;
+  }
 }

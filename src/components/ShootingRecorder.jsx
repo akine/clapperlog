@@ -10,17 +10,18 @@ import {
 } from 'lucide-react';
 
 const ShootingRecorder = () => {
-  const [scenes, setScenes] = useState([]);
-  
+  const [scenes, setScenes] = useState([
+    { id: 1, label: 'サムネイル撮影' },
+    { id: 2, label: 'モノローグ' }
+  ]);
+
   const [records, setRecords] = useState([]);
   const [currentRecord, setCurrentRecord] = useState(null);
   const [selectedScene, setSelectedScene] = useState('');
-  const [customInput, setCustomInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [newSceneStart, setNewSceneStart] = useState('s01');
   const [newSceneEnd, setNewSceneEnd] = useState('s01');
-  const [newSceneTitle, setNewSceneTitle] = useState('');
   const [showAddScene, setShowAddScene] = useState(false);
 
   // 現在時刻を取得する関数
@@ -31,20 +32,17 @@ const ShootingRecorder = () => {
 
   // 撮影開始
   const startRecording = () => {
-    const sceneLabel = selectedScene || customInput;
-    if (!sceneLabel) {
-      alert('シーンを選択するか、カスタム入力を行ってください');
+    if (!selectedScene) {
+      alert('シーンを選択してください');
       return;
     }
 
-    if (selectedScene) {
-      setScenes(prev => prev.filter(s => `${s.code}-${s.title}` !== selectedScene));
-    }
+    setScenes(prev => prev.filter(s => s.label !== selectedScene));
 
     const startTime = getCurrentTime();
     const newRecord = {
       id: Date.now(),
-      scene: sceneLabel,
+      scene: selectedScene,
       startTime: startTime,
       endTime: null,
       pausedDuration: 0,
@@ -100,26 +98,21 @@ const ShootingRecorder = () => {
       setIsRecording(false);
       setIsPaused(false);
       setSelectedScene('');
-      setCustomInput('');
     }
   };
 
   // 新しいシーンを追加
   const addNewScene = () => {
-    if (!newSceneTitle) return;
-
     const start = parseInt(newSceneStart.replace('s', ''), 10);
     const end = parseInt(newSceneEnd.replace('s', ''), 10);
     const newScenes = [];
     for (let i = start; i <= end; i++) {
       newScenes.push({
         id: Date.now() + Math.random(),
-        code: `s${String(i).padStart(2, '0')}`,
-        title: newSceneTitle,
+        label: `s${String(i).padStart(2, '0')}`,
       });
     }
     setScenes([...scenes, ...newScenes]);
-    setNewSceneTitle('');
     setNewSceneStart('s01');
     setNewSceneEnd('s01');
     setShowAddScene(false);
@@ -177,40 +170,19 @@ const ShootingRecorder = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               登録済みシーン
             </label>
-            <select 
-              value={selectedScene} 
-              onChange={(e) => {
-                setSelectedScene(e.target.value);
-                setCustomInput('');
-              }}
+            <select
+              value={selectedScene}
+              onChange={(e) => setSelectedScene(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={isRecording}
             >
               <option value="">シーンを選択してください</option>
               {scenes.map(scene => (
-                <option key={scene.id} value={`${scene.code}-${scene.title}`}>
-                  {scene.code} - {scene.title}
+                <option key={scene.id} value={scene.label}>
+                  {scene.label}
                 </option>
               ))}
             </select>
-          </div>
-
-          {/* カスタム入力 */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              カスタム入力
-            </label>
-            <input
-              type="text"
-              value={customInput}
-              onChange={(e) => {
-                setCustomInput(e.target.value);
-                setSelectedScene('');
-              }}
-              placeholder="例: サムネイル撮影, 昼休憩"
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              disabled={isRecording}
-            />
           </div>
 
           {/* シーン追加ボタン */}
@@ -226,35 +198,26 @@ const ShootingRecorder = () => {
           {/* シーン追加フォーム */}
           {showAddScene && (
             <div className="mt-4 p-4 bg-amber-100 rounded-md">
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="flex gap-2">
-                  <select
-                    value={newSceneStart}
-                    onChange={(e) => setNewSceneStart(e.target.value)}
-                    className="p-2 border border-gray-300 rounded-md flex-1"
-                  >
+              <div className="flex gap-2 mb-4">
+                <select
+                  value={newSceneStart}
+                  onChange={(e) => setNewSceneStart(e.target.value)}
+                  className="p-2 border border-gray-300 rounded-md flex-1"
+                >
                     {Array.from({ length: 99 }, (_, i) => `s${String(i + 1).padStart(2, '0')}`).map(code => (
-                      <option key={code} value={code}>{code}</option>
-                    ))}
-                  </select>
-                  <span className="self-center">~</span>
-                  <select
-                    value={newSceneEnd}
-                    onChange={(e) => setNewSceneEnd(e.target.value)}
-                    className="p-2 border border-gray-300 rounded-md flex-1"
-                  >
-                    {Array.from({ length: 99 }, (_, i) => `s${String(i + 1).padStart(2, '0')}`).map(code => (
-                      <option key={code} value={code}>{code}</option>
-                    ))}
-                  </select>
-                </div>
-                <input
-                  type="text"
-                  value={newSceneTitle}
-                  onChange={(e) => setNewSceneTitle(e.target.value)}
-                  placeholder="シーンタイトル"
-                  className="p-2 border border-gray-300 rounded-md"
-                />
+                  <option key={code} value={code}>{code}</option>
+                ))}
+              </select>
+              <span className="self-center">~</span>
+              <select
+                  value={newSceneEnd}
+                  onChange={(e) => setNewSceneEnd(e.target.value)}
+                  className="p-2 border border-gray-300 rounded-md flex-1"
+                >
+                  {Array.from({ length: 99 }, (_, i) => `s${String(i + 1).padStart(2, '0')}`).map(code => (
+                    <option key={code} value={code}>{code}</option>
+                  ))}
+                </select>
               </div>
               <button
                 onClick={addNewScene}
