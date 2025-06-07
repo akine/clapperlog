@@ -1,3 +1,4 @@
+'use client';
 import React, { useState } from 'react';
 import { FileUp, Upload } from 'lucide-react';
 import { pdfjs } from 'pdfjs-dist';
