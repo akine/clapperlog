@@ -1,25 +1,34 @@
 'use client';
 import React, { useState } from 'react';
 import { FileUp, Upload } from 'lucide-react';
-import { pdfjs } from 'react-pdf';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 const SceneImporter = ({ onScenesImported }) => {
   const [textInput, setTextInput] = useState('');
   const [fileError, setFileError] = useState('');
 
   const parseLines = (raw) => {
-    return raw
+    const results = [];
+    raw
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean)
-      .map((line) => {
+      .forEach((line) => {
+        const rangeMatch = line.match(/^s?(\d{2})~s?(\d{2})\s*[-ー]?\s*(.+)$/i);
+        if (rangeMatch) {
+          const start = parseInt(rangeMatch[1], 10);
+          const end = parseInt(rangeMatch[2], 10);
+          const title = rangeMatch[3];
+          for (let i = start; i <= end; i++) {
+            results.push({ code: `s${String(i).padStart(2, '0')}`, title });
+          }
+          return;
+        }
         const m = line.match(/^s?(\d{2})\s*[-ー]?\s*(.+)$/i);
-        if (!m) return null;
-        return { code: `s${m[1]}`, title: m[2] };
-      })
-      .filter(Boolean);
+        if (m) {
+          results.push({ code: `s${m[1]}`, title: m[2] });
+        }
+      });
+    return results;
   };
 
   const handleScenes = (scenes) => {
@@ -43,38 +52,14 @@ const SceneImporter = ({ onScenesImported }) => {
     reader.readAsText(file, 'utf-8');
   };
 
-  const extractTextFromPDF = async (file) => {
-    const arrayBuffer = await file.arrayBuffer();
-    const doc = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-    let text = '';
-    for (let i = 1; i <= doc.numPages; i++) {
-      const page = await doc.getPage(i);
-      const content = await page.getTextContent();
-      text += content.items.map((it) => it.str).join('\n');
-    }
-    return text;
-  };
-
-  const handlePDFImport = async (file) => {
-    try {
-      const text = await extractTextFromPDF(file);
-      const scenes = parseLines(text);
-      handleScenes(scenes);
-    } catch (e) {
-      setFileError('PDF解析に失敗しました');
-    }
-  };
-
   const onFileChange = (e) => {
     setFileError('');
     const file = e.target.files[0];
     if (!file) return;
-    if (file.type === 'application/pdf') {
-      handlePDFImport(file);
-    } else if (file.type === 'text/csv') {
+    if (file.type === 'text/csv') {
       handleCSVImport(file);
     } else {
-      setFileError('PDFまたはCSVファイルを選択してください');
+      setFileError('CSVファイルを選択してください');
     }
     e.target.value = '';
   };
@@ -86,7 +71,7 @@ const SceneImporter = ({ onScenesImported }) => {
       </h3>
       <input
         type="file"
-        accept=".pdf,.csv"
+        accept=".csv"
         onChange={onFileChange}
         className="mb-3"
       />
