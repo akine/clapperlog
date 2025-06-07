@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Play, Square, Pause, Plus, Download, Trash2, Edit3 } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  Play,
+  Square,
+  Pause,
+  Plus,
+  Download,
+  Trash2,
+} from 'lucide-react';
+import SceneImporter from './SceneImporter';
 
 const ShootingRecorder = () => {
-  const [scenes, setScenes] = useState([
-    { id: 1, code: 's01', title: 'オープニング' },
-    { id: 2, code: 's02', title: '主人公登場' },
-    { id: 3, code: 's03', title: '友人との会話' }
-  ]);
+  const [scenes, setScenes] = useState([]);
   
   const [records, setRecords] = useState([]);
   const [currentRecord, setCurrentRecord] = useState(null);
@@ -17,6 +21,14 @@ const ShootingRecorder = () => {
   const [newSceneCode, setNewSceneCode] = useState('');
   const [newSceneTitle, setNewSceneTitle] = useState('');
   const [showAddScene, setShowAddScene] = useState(false);
+
+  const importScenes = (newScenes) => {
+    if (!Array.isArray(newScenes) || newScenes.length === 0) return;
+    setScenes((prev) => [
+      ...prev,
+      ...newScenes.map((s) => ({ id: Date.now() + Math.random(), ...s })),
+    ]);
+  };
 
   // 現在時刻を取得する関数
   const getCurrentTime = () => {
@@ -155,6 +167,7 @@ const ShootingRecorder = () => {
         
         {/* シーン選択・入力エリア */}
         <div className="mb-6">
+          <SceneImporter onScenesImported={importScenes} />
           <h2 className="text-xl font-semibold mb-4">シーン選択</h2>
           
           {/* 登録済みシーン */}
