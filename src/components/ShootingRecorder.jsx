@@ -8,7 +8,6 @@ import {
   Download,
   Trash2,
 } from 'lucide-react';
-import SceneImporter from './SceneImporter';
 
 const ShootingRecorder = () => {
   const [scenes, setScenes] = useState([]);
@@ -19,17 +18,10 @@ const ShootingRecorder = () => {
   const [customInput, setCustomInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [newSceneCode, setNewSceneCode] = useState('');
+  const [newSceneStart, setNewSceneStart] = useState('s01');
+  const [newSceneEnd, setNewSceneEnd] = useState('s01');
   const [newSceneTitle, setNewSceneTitle] = useState('');
   const [showAddScene, setShowAddScene] = useState(false);
-
-  const importScenes = (newScenes) => {
-    if (!Array.isArray(newScenes) || newScenes.length === 0) return;
-    setScenes((prev) => [
-      ...prev,
-      ...newScenes.map((s) => ({ id: Date.now() + Math.random(), ...s })),
-    ]);
-  };
 
   // 現在時刻を取得する関数
   const getCurrentTime = () => {
@@ -43,6 +35,10 @@ const ShootingRecorder = () => {
     if (!sceneLabel) {
       alert('シーンを選択するか、カスタム入力を行ってください');
       return;
+    }
+
+    if (selectedScene) {
+      setScenes(prev => prev.filter(s => `${s.code}-${s.title}` !== selectedScene));
     }
 
     const startTime = getCurrentTime();
@@ -110,32 +106,23 @@ const ShootingRecorder = () => {
 
   // 新しいシーンを追加
   const addNewScene = () => {
-    if (newSceneCode && newSceneTitle) {
-      const rangeMatch = newSceneCode.match(/^s?(\d{2})~s?(\d{2})$/i);
-      if (rangeMatch) {
-        const start = parseInt(rangeMatch[1], 10);
-        const end = parseInt(rangeMatch[2], 10);
-        const newScenes = [];
-        for (let i = start; i <= end; i++) {
-          newScenes.push({
-            id: Date.now() + Math.random(),
-            code: `s${String(i).padStart(2, '0')}`,
-            title: newSceneTitle
-          });
-        }
-        setScenes([...scenes, ...newScenes]);
-      } else {
-        const newScene = {
-          id: Date.now(),
-          code: newSceneCode,
-          title: newSceneTitle
-        };
-        setScenes([...scenes, newScene]);
-      }
-      setNewSceneCode('');
-      setNewSceneTitle('');
-      setShowAddScene(false);
+    if (!newSceneTitle) return;
+
+    const start = parseInt(newSceneStart.replace('s', ''), 10);
+    const end = parseInt(newSceneEnd.replace('s', ''), 10);
+    const newScenes = [];
+    for (let i = start; i <= end; i++) {
+      newScenes.push({
+        id: Date.now() + Math.random(),
+        code: `s${String(i).padStart(2, '0')}`,
+        title: newSceneTitle,
+      });
     }
+    setScenes([...scenes, ...newScenes]);
+    setNewSceneTitle('');
+    setNewSceneStart('s01');
+    setNewSceneEnd('s01');
+    setShowAddScene(false);
   };
 
   // CSVダウンロード
@@ -177,13 +164,12 @@ const ShootingRecorder = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-gray-50 min-h-screen">
+    <div className="max-w-4xl mx-auto p-6 bg-amber-50 min-h-screen">
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">撮影記録管理</h1>
         
         {/* シーン選択・入力エリア */}
         <div className="mb-6">
-          <SceneImporter onScenesImported={importScenes} />
           <h2 className="text-xl font-semibold mb-4">シーン選択</h2>
           
           {/* 登録済みシーン */}
@@ -239,15 +225,29 @@ const ShootingRecorder = () => {
 
           {/* シーン追加フォーム */}
           {showAddScene && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-md">
+            <div className="mt-4 p-4 bg-amber-100 rounded-md">
               <div className="grid grid-cols-2 gap-4 mb-4">
-                <input
-                  type="text"
-                  value={newSceneCode}
-                  onChange={(e) => setNewSceneCode(e.target.value)}
-                  placeholder="シーンコード (s04 または s04~s06)"
-                  className="p-2 border border-gray-300 rounded-md"
-                />
+                <div className="flex gap-2">
+                  <select
+                    value={newSceneStart}
+                    onChange={(e) => setNewSceneStart(e.target.value)}
+                    className="p-2 border border-gray-300 rounded-md flex-1"
+                  >
+                    {Array.from({ length: 99 }, (_, i) => `s${String(i + 1).padStart(2, '0')}`).map(code => (
+                      <option key={code} value={code}>{code}</option>
+                    ))}
+                  </select>
+                  <span className="self-center">~</span>
+                  <select
+                    value={newSceneEnd}
+                    onChange={(e) => setNewSceneEnd(e.target.value)}
+                    className="p-2 border border-gray-300 rounded-md flex-1"
+                  >
+                    {Array.from({ length: 99 }, (_, i) => `s${String(i + 1).padStart(2, '0')}`).map(code => (
+                      <option key={code} value={code}>{code}</option>
+                    ))}
+                  </select>
+                </div>
                 <input
                   type="text"
                   value={newSceneTitle}
@@ -355,7 +355,7 @@ const ShootingRecorder = () => {
                 </thead>
                 <tbody>
                   {records.map(record => (
-                    <tr key={record.id} className="hover:bg-gray-50">
+                    <tr key={record.id} className="hover:bg-amber-50">
                       <td className="border border-gray-300 px-4 py-2">{record.scene}</td>
                       <td className="border border-gray-300 px-4 py-2">{record.startTime}</td>
                       <td className="border border-gray-300 px-4 py-2">{record.endTime}</td>
