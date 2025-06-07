@@ -194,15 +194,15 @@ const ShootingRecorder = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900">
       <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
         {/* ヘッダー */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full">
+            <div className="p-3 bg-linear-to-r from-purple-500 to-pink-500 rounded-full">
               <Camera className="h-8 w-8 text-white" />
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-linear-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
               撮影記録管理
             </h1>
           </div>
@@ -213,7 +213,7 @@ const ShootingRecorder = () => {
           {/* シーン選択エリア */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 shadow-2xl">
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-              <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full"></div>
+              <div className="w-6 h-6 bg-linear-to-r from-blue-400 to-purple-400 rounded-full"></div>
               シーン選択
             </h2>
             
@@ -226,7 +226,7 @@ const ShootingRecorder = () => {
                 <select
                   value={selectedScene}
                   onChange={(e) => setSelectedScene(e.target.value)}
-                  className="w-full p-4 bg-white/10 backdrop-blur border border-white/30 rounded-xl text-white placeholder-slate-400 focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200"
+                  className="w-full p-4 bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-slate-400 focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200"
                   disabled={isRecording}
                 >
                   <option value="" className="bg-slate-800 text-white">シーンを選択してください</option>
@@ -241,7 +241,7 @@ const ShootingRecorder = () => {
               {/* シーン追加ボタン */}
               <button
                 onClick={() => setShowAddScene(!showAddScene)}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+                className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
                 disabled={isRecording}
               >
                 <Plus size={20} />
@@ -250,14 +250,14 @@ const ShootingRecorder = () => {
 
               {/* シーン追加フォーム */}
               {showAddScene && (
-                <div className="bg-gradient-to-r from-blue-50/10 to-purple-50/10 backdrop-blur rounded-xl p-6 border border-white/20">
+                <div className="bg-linear-to-r from-blue-50/10 to-purple-50/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
                   {/* モード選択タブ */}
                   <div className="flex gap-2 mb-6">
                     <button
                       onClick={() => setAddMode('range')}
                       className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
                         addMode === 'range'
-                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                          ? 'bg-linear-to-r from-blue-500 to-purple-500 text-white shadow-lg'
                           : 'bg-white/10 text-slate-300 hover:bg-white/20'
                       }`}
                     >
@@ -267,7 +267,7 @@ const ShootingRecorder = () => {
                       onClick={() => setAddMode('custom')}
                       className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
                         addMode === 'custom'
-                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                          ? 'bg-linear-to-r from-blue-500 to-purple-500 text-white shadow-lg'
                           : 'bg-white/10 text-slate-300 hover:bg-white/20'
                       }`}
                     >
@@ -278,14 +278,14 @@ const ShootingRecorder = () => {
                   {addMode === 'range' ? (
                     <div>
                       <div className="flex gap-3 mb-4 items-center">
-                        <div className="flex-1 p-3 bg-white/5 backdrop-blur border border-white/20 rounded-lg text-slate-300 flex items-center">
+                        <div className="flex-1 p-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg text-slate-300 flex items-center">
                           s01
                         </div>
                         <span className="text-white font-bold text-lg">〜</span>
                         <select
                           value={newSceneEnd}
                           onChange={(e) => setNewSceneEnd(e.target.value)}
-                          className="flex-1 p-3 bg-white/10 backdrop-blur border border-white/30 rounded-lg text-white focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                          className="flex-1 p-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg text-white focus:ring-2 focus:ring-blue-400 focus:border-transparent"
                         >
                           {Array.from({ length: 99 }, (_, i) => `s${String(i + 1).padStart(2, '0')}`).map(code => (
                             <option key={code} value={code} className="bg-slate-800 text-white">{code}</option>
@@ -304,7 +304,7 @@ const ShootingRecorder = () => {
                         value={customSceneName}
                         onChange={(e) => setCustomSceneName(e.target.value)}
                         placeholder="例: 緊急リテイク, 追加カット, インサート撮影"
-                        className="w-full p-3 bg-white/10 backdrop-blur border border-white/30 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200"
+                        className="w-full p-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200"
                         onKeyPress={(e) => e.key === 'Enter' && addNewScene()}
                       />
                       <p className="text-slate-400 text-sm mt-2">現場での急なシーン変更に対応できます</p>
@@ -313,7 +313,7 @@ const ShootingRecorder = () => {
 
                   <button
                     onClick={addNewScene}
-                    className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg font-semibold"
+                    className="mt-4 px-6 py-3 bg-linear-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg font-semibold"
                   >
                     {addMode === 'range' ? '連番追加' : 'カスタム追加'}
                   </button>
@@ -325,13 +325,13 @@ const ShootingRecorder = () => {
           {/* 撮影コントロール */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 shadow-2xl">
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-              <div className="w-6 h-6 bg-gradient-to-r from-red-400 to-pink-400 rounded-full"></div>
+              <div className="w-6 h-6 bg-linear-to-r from-red-400 to-pink-400 rounded-full"></div>
               撮影コントロール
             </h2>
             
             {/* 現在の撮影状況 */}
             {currentRecord && (
-              <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur rounded-xl p-6 mb-6 border border-blue-400/30">
+              <div className="bg-linear-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-xl p-6 mb-6 border border-blue-400/30">
                 <div className="flex items-center gap-3 mb-2">
                   <div className={`w-3 h-3 rounded-full ${isPaused ? 'bg-orange-400 animate-pulse' : 'bg-red-500 animate-pulse'}`}></div>
                   <p className="text-xl font-bold text-white">
@@ -351,7 +351,7 @@ const ShootingRecorder = () => {
               {!isRecording ? (
                 <button
                   onClick={startRecording}
-                  className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl hover:from-red-600 hover:to-pink-600 transition-all duration-200 text-lg font-bold shadow-xl hover:shadow-2xl transform hover:scale-105"
+                  className="flex items-center gap-3 px-8 py-4 bg-linear-to-r from-red-500 to-pink-500 text-white rounded-xl hover:from-red-600 hover:to-pink-600 transition-all duration-200 text-lg font-bold shadow-xl hover:shadow-2xl transform hover:scale-105"
                 >
                   <Play size={24} />
                   撮影開始
@@ -361,7 +361,7 @@ const ShootingRecorder = () => {
                   {!isPaused ? (
                     <button
                       onClick={pauseRecording}
-                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-500 text-white rounded-xl hover:from-orange-600 hover:to-yellow-600 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
+                      className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-orange-500 to-yellow-500 text-white rounded-xl hover:from-orange-600 hover:to-yellow-600 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
                     >
                       <Pause size={20} />
                       一時停止
@@ -369,7 +369,7 @@ const ShootingRecorder = () => {
                   ) : (
                     <button
                       onClick={resumeRecording}
-                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
+                      className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
                     >
                       <Play size={20} />
                       再開
@@ -377,7 +377,7 @@ const ShootingRecorder = () => {
                   )}
                   <button
                     onClick={stopRecording}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-slate-600 to-slate-700 text-white rounded-xl hover:from-slate-700 hover:to-slate-800 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-slate-600 to-slate-700 text-white rounded-xl hover:from-slate-700 hover:to-slate-800 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
                     <Square size={20} />
                     撮影終了
@@ -391,13 +391,13 @@ const ShootingRecorder = () => {
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 shadow-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                <div className="w-6 h-6 bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full"></div>
+                <div className="w-6 h-6 bg-linear-to-r from-emerald-400 to-blue-400 rounded-full"></div>
                 撮影記録
               </h2>
               {records.length > 0 && (
                 <button
                   onClick={downloadCSV}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+                  className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
                 >
                   <Download size={18} />
                   CSV出力
@@ -407,7 +407,7 @@ const ShootingRecorder = () => {
 
             {records.length === 0 ? (
               <div className="text-center py-16">
-                <div className="w-16 h-16 bg-gradient-to-r from-slate-600 to-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-linear-to-r from-slate-600 to-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Camera className="h-8 w-8 text-slate-400" />
                 </div>
                 <p className="text-slate-400 text-lg">まだ記録がありません</p>
@@ -419,7 +419,7 @@ const ShootingRecorder = () => {
                   <div className="grid grid-cols-1 gap-4 sm:hidden">
                     {/* モバイル表示 */}
                     {records.map(record => (
-                      <div key={record.id} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-200">
+                      <div key={record.id} className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-200">
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="font-bold text-white text-lg">{record.scene}</h3>
                           <button
