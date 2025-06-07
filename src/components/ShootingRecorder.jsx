@@ -109,10 +109,7 @@ const ShootingRecorder = () => {
         status: 'completed'
       };
 
-      // 撮影時間を計算して表示
-      const duration = calculateDuration(finalRecord.startTime, finalRecord.endTime, finalRecord.pausedDuration);
-      alert(`撮影完了！\nシーン: ${finalRecord.scene}\n撮影時間: ${duration}`);
-
+      // 撮影記録に追加
       setRecords(prevRecords => {
         console.log('Adding record:', finalRecord); // デバッグ用
         console.log('Previous records:', prevRecords); // デバッグ用
