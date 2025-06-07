@@ -111,12 +111,27 @@ const ShootingRecorder = () => {
   // 新しいシーンを追加
   const addNewScene = () => {
     if (newSceneCode && newSceneTitle) {
-      const newScene = {
-        id: Date.now(),
-        code: newSceneCode,
-        title: newSceneTitle
-      };
-      setScenes([...scenes, newScene]);
+      const rangeMatch = newSceneCode.match(/^s?(\d{2})~s?(\d{2})$/i);
+      if (rangeMatch) {
+        const start = parseInt(rangeMatch[1], 10);
+        const end = parseInt(rangeMatch[2], 10);
+        const newScenes = [];
+        for (let i = start; i <= end; i++) {
+          newScenes.push({
+            id: Date.now() + Math.random(),
+            code: `s${String(i).padStart(2, '0')}`,
+            title: newSceneTitle
+          });
+        }
+        setScenes([...scenes, ...newScenes]);
+      } else {
+        const newScene = {
+          id: Date.now(),
+          code: newSceneCode,
+          title: newSceneTitle
+        };
+        setScenes([...scenes, newScene]);
+      }
       setNewSceneCode('');
       setNewSceneTitle('');
       setShowAddScene(false);
@@ -230,7 +245,7 @@ const ShootingRecorder = () => {
                   type="text"
                   value={newSceneCode}
                   onChange={(e) => setNewSceneCode(e.target.value)}
-                  placeholder="シーンコード (s04)"
+                  placeholder="シーンコード (s04 または s04~s06)"
                   className="p-2 border border-gray-300 rounded-md"
                 />
                 <input
