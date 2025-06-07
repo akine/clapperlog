@@ -1,36 +1,128 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# ClapperLog 🎬
 
-## Getting Started
+撮影記録管理アプリ - 映像制作現場での撮影時刻とシーン情報を記録するWebアプリ
 
-First, run the development server:
+## 概要
 
+ショートドラマ等の撮影現場で、香盤通りに撮影が行われない際に、実際の撮影時刻とシーン情報を記録し、後の編集作業（DaVinci Resolveでのメタデータ入力）を効率化するためのアプリです。
+
+## 主な機能
+
+- 🎯 **香盤表PDF自動読み込み** - PDFから自動でシーン情報を抽出・登録
+- ⏰ **正確な時刻記録** - 撮影開始・終了時刻を秒単位で記録
+- ⏸️ **一時中断・再開対応** - 撮影中断時の記録管理
+- 📊 **CSV出力** - 編集時に使用できる形式でデータエクスポート
+- 🔧 **カスタム入力** - 突発的な撮影（サムネイル撮影等）にも対応
+
+## 使用方法
+
+### 1. 事前準備
+- 香盤表PDFをアップロードしてシーン情報を自動登録
+- または手動でシーン情報を登録
+
+### 2. 撮影記録
+1. 撮影するシーンを選択
+2. 「撮影開始」ボタンを押す
+3. 撮影実行
+4. 「撮影終了」ボタンを押す
+
+### 3. データ出力
+- 撮影終了後、「CSV出力」ボタンでデータをダウンロード
+- 編集時にDaVinci Resolveでメタデータ入力に活用
+
+## セットアップ
+
+### 必要な環境
+- Node.js 18以上
+- npm または yarn
+
+### インストール
 ```bash
+# リポジトリをクローン
+git clone https://github.com/[username]/clapperlog.git
+cd clapperlog
+
+# 依存関係をインストール
+npm install
+
+# 開発サーバーを起動
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### デプロイ
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+#### Vercel (推奨)
+```bash
+# Vercel CLI をインストール
+npm install -g vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# デプロイ
+vercel
+```
 
-## Learn More
+#### その他のプラットフォーム
+```bash
+# ビルド
+npm run build
 
-To learn more about Next.js, take a look at the following resources:
+# 本番サーバー起動
+npm start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 技術スタック
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Framework**: Next.js 14
+- **UI**: React + Tailwind CSS
+- **Icons**: Lucide React
+- **PDF処理**: PDF.js (予定)
 
-## Deploy on Vercel
+## ファイル構成
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+clapperlog/
+├── README.md
+├── package.json
+├── next.config.js
+├── tailwind.config.js
+├── src/
+│   ├── app/
+│   │   ├── layout.js
+│   │   ├── page.js
+│   │   └── globals.css
+│   └── components/
+│       └── ShootingRecorder.jsx
+└── docs/
+    └── specifications.md
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 仕様詳細
+
+詳細な仕様については [docs/specifications.md](./docs/specifications.md) をご参照ください。
+
+## 使用例
+
+```
+事前準備：
+香盤表PDF読み込み → 自動解析 → シーン一括登録
+
+撮影当日：
+10:00 シーン07選択 → 撮影開始
+10:45 撮影終了
+→ 記録: s07-莉子環奈散歩, 10:00, 10:45
+
+11:00 「サムネイル撮影」カスタム入力 → 撮影開始
+11:15 撮影終了
+→ 記録: サムネイル撮影, 11:00, 11:15
+```
+
+## 貢献
+
+プルリクエストやイシューの作成を歓迎します。
+
+## ライセンス
+
+MIT License
+
+## 作者
+
+映像制作の現場効率化を目指して開発しました。
