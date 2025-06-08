@@ -66,6 +66,7 @@ function App() {
   const [customSceneName, setCustomSceneName] = useState('')
   const [creditTaps, setCreditTaps] = useState(0)
   const [showHearts, setShowHearts] = useState(false)
+  const [showResetDialog, setShowResetDialog] = useState(false)
 
   // ローカルストレージへの保存
   useEffect(() => {
@@ -308,6 +309,7 @@ function App() {
     setSelectedScene('')
     setIsRecording(false)
     setIsPaused(false)
+    setShowResetDialog(false)
   }
 
   return (
@@ -533,26 +535,10 @@ function App() {
                   CSV出力
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <DropdownMenuItem>
-                      <RotateCw className="w-4 h-4 mr-2" />
-                      初期化
-                    </DropdownMenuItem>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>データを初期化しますか？</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        ローカルに保存された撮影記録をすべて削除します。元に戻すことはできません。
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>キャンセル</AlertDialogCancel>
-                      <AlertDialogAction onClick={resetApp} className="bg-red-600 text-white hover:bg-red-700">初期化</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <DropdownMenuItem onSelect={() => setShowResetDialog(true)}>
+                  <RotateCw className="w-4 h-4 mr-2" />
+                  初期化
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -652,6 +638,21 @@ function App() {
           {'\u2764\u2764\u2764\u2764\u2764'}
         </span>
       </footer>
+
+      <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>データを初期化しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              シーン/撮影記録をすべて削除します。元に戻すことはできません。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={resetApp} className="bg-red-600 text-white hover:bg-red-700">初期化</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
