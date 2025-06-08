@@ -1,4 +1,38 @@
+# Node modules
 node_modules/
-.next/
-dist/
+
+# Lock files
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
 *.log
+
+# Vite / build output
+dist/
+
+# Next.js (もし使っているなら)
+.next/
+out/
+
+# Production
+build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE / editor
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Misc
+*.pem
