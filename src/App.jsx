@@ -3,6 +3,8 @@ import { Play, Pause, Square, Plus, Download, Trash2, Clock, Camera } from 'luci
 import { Button } from '@/components/ui/button.jsx'
 import './App.css'
 
+const APP_VERSION = __APP_VERSION__
+
 function App() {
   // 状態管理
   const [scenes, setScenes] = useState(() => {
@@ -33,6 +35,8 @@ function App() {
   const [addMode, setAddMode] = useState('range')
   const [newSceneEnd, setNewSceneEnd] = useState('')
   const [customSceneName, setCustomSceneName] = useState('')
+  const [creditTaps, setCreditTaps] = useState(0)
+  const [showHearts, setShowHearts] = useState(false)
 
   // ローカルストレージへの保存
   useEffect(() => {
@@ -247,6 +251,18 @@ function App() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+  }
+
+  const handleCreditTap = () => {
+    setCreditTaps(prev => {
+      const next = prev + 1
+      if (next >= 5) {
+        setShowHearts(true)
+        setTimeout(() => setShowHearts(false), 1500)
+        return 0
+      }
+      return next
+    })
   }
 
   return (
@@ -555,6 +571,14 @@ function App() {
           )}
         </div>
       </div>
+      <footer className="relative text-center text-xs text-slate-500 py-4">
+        v{APP_VERSION} - made by <span onClick={handleCreditTap}>Undone</span>
+        <span
+          className={`absolute left-1/2 -translate-x-1/2 -top-2 text-pink-500 transition-opacity duration-700 ${showHearts ? 'opacity-100' : 'opacity-0'}`}
+        >
+          {'\u2764\u2764\u2764\u2764\u2764'}
+        </span>
+      </footer>
     </div>
   )
 }
