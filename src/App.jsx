@@ -1,6 +1,35 @@
 import { useState, useEffect } from 'react'
-import { Play, Pause, Square, Plus, Download, Trash2, Clock, Camera } from 'lucide-react'
+import {
+  Play,
+  Pause,
+  Square,
+  Plus,
+  Download,
+  Trash2,
+  Clock,
+  Camera,
+  MoreVertical,
+  RotateCw,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu.jsx'
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog.jsx'
 import './App.css'
 
 const APP_VERSION = __APP_VERSION__
@@ -37,6 +66,7 @@ function App() {
   const [customSceneName, setCustomSceneName] = useState('')
   const [creditTaps, setCreditTaps] = useState(0)
   const [showHearts, setShowHearts] = useState(false)
+  const [showResetDialog, setShowResetDialog] = useState(false)
 
   // ローカルストレージへの保存
   useEffect(() => {
@@ -265,6 +295,23 @@ function App() {
     })
   }
 
+  const resetApp = () => {
+    localStorage.removeItem('shooting-app-scenes')
+    localStorage.removeItem('shooting-app-records')
+    localStorage.removeItem('shooting-app-current-record')
+    localStorage.removeItem('shooting-app-selected-scene')
+    localStorage.removeItem('shooting-app-is-recording')
+    localStorage.removeItem('shooting-app-is-paused')
+
+    setScenes(['サムネイル撮影', 'モノローグ'])
+    setRecords([])
+    setCurrentRecord(null)
+    setSelectedScene('')
+    setIsRecording(false)
+    setIsPaused(false)
+    setShowResetDialog(false)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-white">
       <div className="container mx-auto px-4 py-8">
@@ -476,14 +523,24 @@ function App() {
               <Clock className="w-5 h-5 text-blue-600" />
               撮影記録
             </h2>
-            <Button
-              onClick={exportToCSV}
-              disabled={records.length === 0}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              CSV出力
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <MoreVertical className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={exportToCSV} disabled={records.length === 0}>
+                  <Download className="w-4 h-4 mr-2" />
+                  CSV出力
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setShowResetDialog(true)}>
+                  <RotateCw className="w-4 h-4 mr-2" />
+                  初期化
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {records.length === 0 ? (
@@ -571,14 +628,31 @@ function App() {
           )}
         </div>
       </div>
-      <footer className="relative text-center text-xs text-slate-500 py-4">
-        v{APP_VERSION} - made by <span onClick={handleCreditTap}>Undone</span>
+      <footer className="relative text-center text-xs text-slate-500 py-4 space-y-2">
+        <div>
+          v{APP_VERSION} - made by <span onClick={handleCreditTap}>Undone</span>
+        </div>
         <span
           className={`absolute left-1/2 -translate-x-1/2 -top-2 text-pink-500 transition-opacity duration-700 ${showHearts ? 'opacity-100' : 'opacity-0'}`}
         >
           {'\u2764\u2764\u2764\u2764\u2764'}
         </span>
       </footer>
+
+      <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>データを初期化しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              シーン/撮影記録をすべて削除します。元に戻すことはできません。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={resetApp} className="bg-red-600 text-white hover:bg-red-700">初期化</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
