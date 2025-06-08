@@ -1,6 +1,24 @@
 import { useState, useEffect } from 'react'
-import { Play, Pause, Square, Plus, Download, Trash2, Clock, Camera } from 'lucide-react'
+import {
+  Play,
+  Pause,
+  Square,
+  Plus,
+  Download,
+  Trash2,
+  Clock,
+  Camera,
+  MoreVertical,
+  RotateCw,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu.jsx'
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -503,14 +521,40 @@ function App() {
               <Clock className="w-5 h-5 text-blue-600" />
               撮影記録
             </h2>
-            <Button
-              onClick={exportToCSV}
-              disabled={records.length === 0}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              CSV出力
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <MoreVertical className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={exportToCSV} disabled={records.length === 0}>
+                  <Download className="w-4 h-4 mr-2" />
+                  CSV出力
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem>
+                      <RotateCw className="w-4 h-4 mr-2" />
+                      初期化
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>データを初期化しますか？</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        ローカルに保存された撮影記録をすべて削除します。元に戻すことはできません。
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                      <AlertDialogAction onClick={resetApp} className="bg-red-600 text-white hover:bg-red-700">初期化</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {records.length === 0 ? (
@@ -602,23 +646,6 @@ function App() {
         <div>
           v{APP_VERSION} - made by <span onClick={handleCreditTap}>Undone</span>
         </div>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="outline" size="sm">初期化</Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>データを初期化しますか？</AlertDialogTitle>
-              <AlertDialogDescription>
-                ローカルに保存された撮影記録をすべて削除します。元に戻すことはできません。
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>キャンセル</AlertDialogCancel>
-              <AlertDialogAction onClick={resetApp} className="bg-red-600 text-white hover:bg-red-700">初期化</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
         <span
           className={`absolute left-1/2 -translate-x-1/2 -top-2 text-pink-500 transition-opacity duration-700 ${showHearts ? 'opacity-100' : 'opacity-0'}`}
         >
