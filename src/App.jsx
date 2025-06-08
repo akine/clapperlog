@@ -3,6 +3,8 @@ import { Play, Pause, Square, Plus, Download, Trash2, Clock, Camera } from 'luci
 import { Button } from '@/components/ui/button.jsx'
 import './App.css'
 
+const APP_VERSION = __APP_VERSION__
+
 function App() {
   // 状態管理
   const [scenes, setScenes] = useState(() => {
@@ -555,6 +557,9 @@ function App() {
           )}
         </div>
       </div>
+      <footer className="text-center text-xs text-slate-500 py-4">
+        v{APP_VERSION} - made by Undone
+      </footer>
     </div>
   )
 }
