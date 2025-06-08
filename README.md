@@ -1,127 +1,185 @@
-# ClapperLog 🎬
+# 撮影記録管理アプリ - ローカル環境構築ガイド
 
-撮影記録管理アプリ - 映像制作現場での撮影時刻とシーン情報を記録するWebアプリ
+## 📋 概要
+このガイドでは、撮影記録管理アプリをローカル環境で動作させるための手順を説明します。
 
-## 概要
+## 🛠️ 必要な環境
 
-ショートドラマ等の撮影現場で、香盤通りに撮影が行われない際に、実際の撮影時刻とシーン情報を記録し、後の編集作業（DaVinci Resolveでのメタデータ入力）を効率化するためのアプリです。
+### Node.js
+- **バージョン**: 18.0.0 以上推奨
+- **ダウンロード**: https://nodejs.org/
 
-## 主な機能
+### パッケージマネージャー
+以下のいずれかが必要です：
+- **npm** (Node.jsに同梱)
+- **pnpm** (推奨)
+- **yarn**
 
-- ⏰ **正確な時刻記録** - 撮影開始・終了時刻を秒単位で記録
-- ⏸️ **一時中断・再開対応** - 撮影中断時の記録管理
-- 📊 **CSV出力** - 編集時に使用できる形式でデータエクスポート
-- 🔧 **カスタム入力** - 突発的な撮影（サムネイル撮影等）にも対応
-- 🆕 **シーン番号範囲指定** - `s01~s05` のように連番登録可能
+## 📦 環境構築手順
 
-## 使用方法
-
-### 1. 事前準備
-- CSVまたはテキストでシーン情報を登録
-- もしくは手動でシーン情報を登録
-
-### 2. 撮影記録
-1. 撮影するシーンを選択
-2. 「撮影開始」ボタンを押す
-3. 撮影実行
-4. 「撮影終了」ボタンを押す
-
-### 3. データ出力
-- 撮影終了後、「CSV出力」ボタンでデータをダウンロード
-- 編集時にDaVinci Resolveでメタデータ入力に活用
-
-## セットアップ
-
-### 必要な環境
-- Node.js 18以上
-- npm または yarn
-
-### インストール
+### 1. プロジェクトファイルの展開
 ```bash
-# リポジトリをクローン
-git clone https://github.com/[username]/clapperlog.git
-cd clapperlog
+# ダウンロードしたzipファイルを展開
+unzip shooting-record-app-local.zip
+cd shooting-record-app-local
+```
+
+### 2. 依存関係のインストール
+
+#### pnpmを使用する場合（推奨）
+```bash
+# pnpmがインストールされていない場合
+npm install -g pnpm
 
 # 依存関係をインストール
-npm install
+pnpm install
+```
 
-# 開発サーバーを起動
+#### npmを使用する場合
+```bash
+npm install
+```
+
+#### yarnを使用する場合
+```bash
+yarn install
+```
+
+### 3. 開発サーバーの起動
+
+#### pnpmの場合
+```bash
+pnpm run dev
+```
+
+#### npmの場合
+```bash
 npm run dev
 ```
 
-### デプロイ
-
-#### Vercel (推奨)
+#### yarnの場合
 ```bash
-# Vercel CLI をインストール
+yarn dev
+```
+
+### 4. ブラウザでアクセス
+開発サーバーが起動したら、以下のURLにアクセスしてください：
+```
+http://localhost:5173/
+```
+
+## 🏗️ 本番ビルド
+
+### ビルドの実行
+```bash
+# pnpmの場合
+pnpm run build
+
+# npmの場合
+npm run build
+
+# yarnの場合
+yarn build
+```
+
+### ビルド結果の確認
+```bash
+# プレビューサーバーの起動
+pnpm run preview  # または npm run preview / yarn preview
+```
+
+ビルドされたファイルは `dist/` フォルダに生成されます。
+
+## 📁 プロジェクト構造
+
+```
+shooting-record-app-local/
+├── public/                 # 静的ファイル
+│   └── undone_logo.svg    # 会社ロゴ
+├── src/                   # ソースコード
+│   ├── components/        # UIコンポーネント
+│   ├── App.jsx           # メインアプリケーション
+│   ├── App.css           # スタイルシート
+│   └── main.jsx          # エントリーポイント
+├── package.json          # プロジェクト設定
+├── vite.config.js        # Vite設定
+└── tailwind.config.js    # Tailwind CSS設定
+```
+
+## 🔧 主要な技術スタック
+
+- **React 18**: UIライブラリ
+- **Vite**: ビルドツール
+- **Tailwind CSS**: CSSフレームワーク
+- **Lucide React**: アイコンライブラリ
+
+## 🌐 デプロイ
+
+### 静的ホスティングサービスへのデプロイ
+ビルド後の `dist/` フォルダを以下のサービスにアップロードできます：
+- Vercel
+- Netlify
+- GitHub Pages
+- Firebase Hosting
+
+### 例：Vercelへのデプロイ
+```bash
+# Vercel CLIのインストール
 npm install -g vercel
 
 # デプロイ
-vercel
+vercel --prod
 ```
 
-#### その他のプラットフォーム
+## 🐛 トラブルシューティング
+
+### ポートが使用中の場合
 ```bash
-# ビルド
-npm run build
-
-# 本番サーバー起動
-npm start
+# 別のポートで起動
+pnpm run dev --port 3000
 ```
 
-## 技術スタック
-
-- **Framework**: Next.js 14
-- **UI**: React + Tailwind CSS
-- **Icons**: Lucide React
-
-## ファイル構成
-
-```
-clapperlog/
-├── README.md
-├── package.json
-├── next.config.js
-├── tailwind.config.js
-├── src/
-│   ├── app/
-│   │   ├── layout.js
-│   │   ├── page.js
-│   │   └── globals.css
-│   └── components/
-│       └── ShootingRecorder.jsx
-└── docs/
-    └── specifications.md
+### 依存関係のエラー
+```bash
+# node_modulesを削除して再インストール
+rm -rf node_modules
+pnpm install
 ```
 
-## 仕様詳細
-
-詳細な仕様については [docs/specifications.md](./docs/specifications.md) をご参照ください。
-
-## 使用例
-
-```
-事前準備：
-CSV/テキスト読み込み → シーン一括登録
-
-撮影当日：
-10:00 シーン07選択 → 撮影開始
-10:45 撮影終了
-→ 記録: s07-莉子環奈散歩, 10:00, 10:45
-
-11:00 「サムネイル撮影」カスタム入力 → 撮影開始
-11:15 撮影終了
-→ 記録: サムネイル撮影, 11:00, 11:15
+### キャッシュのクリア
+```bash
+# Viteのキャッシュをクリア
+pnpm run dev --force
 ```
 
-## 貢献
+## 📝 開発時の注意事項
 
-プルリクエストやイシューの作成を歓迎します。
+### ローカルストレージ
+- アプリの状態はブラウザのローカルストレージに保存されます
+- 開発者ツールでローカルストレージをクリアできます
 
-## ライセンス
+### ホットリロード
+- ファイルを保存すると自動的にブラウザが更新されます
+- CSSの変更は即座に反映されます
 
-MIT License
+## 🔄 アップデート
 
-## 作者
+新しいバージョンが提供された場合：
+1. 新しいzipファイルをダウンロード
+2. 既存のプロジェクトをバックアップ
+3. 新しいファイルで置き換え
+4. `pnpm install` で依存関係を更新
 
-映像制作の現場効率化を目指して開発しました。
+## 📞 サポート
+
+問題が発生した場合は、以下の情報を含めてお問い合わせください：
+- OS（Windows/Mac/Linux）
+- Node.jsのバージョン
+- エラーメッセージ
+- 実行したコマンド
+
+---
+
+**開発者**: UNDONE
+**最終更新**: 2025年6月8日
+
