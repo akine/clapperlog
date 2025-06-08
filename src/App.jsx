@@ -572,7 +572,7 @@ function App() {
         </div>
       </div>
       <footer className="relative text-center text-xs text-slate-500 py-4">
-        v{APP_VERSION} - made by <span onClick={handleCreditTap} className="cursor-pointer underline">Undone</span>
+        v{APP_VERSION} - made by <span onClick={handleCreditTap}>Undone</span>
         <span
           className={`absolute left-1/2 -translate-x-1/2 -top-2 text-pink-500 transition-opacity duration-700 ${showHearts ? 'opacity-100' : 'opacity-0'}`}
         >
