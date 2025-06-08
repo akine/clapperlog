@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react'
 import { Play, Pause, Square, Plus, Download, Trash2, Clock, Camera } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog.jsx'
 import './App.css'
 
 const APP_VERSION = __APP_VERSION__
@@ -263,6 +274,22 @@ function App() {
       }
       return next
     })
+  }
+
+  const resetApp = () => {
+    localStorage.removeItem('shooting-app-scenes')
+    localStorage.removeItem('shooting-app-records')
+    localStorage.removeItem('shooting-app-current-record')
+    localStorage.removeItem('shooting-app-selected-scene')
+    localStorage.removeItem('shooting-app-is-recording')
+    localStorage.removeItem('shooting-app-is-paused')
+
+    setScenes(['サムネイル撮影', 'モノローグ'])
+    setRecords([])
+    setCurrentRecord(null)
+    setSelectedScene('')
+    setIsRecording(false)
+    setIsPaused(false)
   }
 
   return (
@@ -571,8 +598,27 @@ function App() {
           )}
         </div>
       </div>
-      <footer className="relative text-center text-xs text-slate-500 py-4">
-        v{APP_VERSION} - made by <span onClick={handleCreditTap}>Undone</span>
+      <footer className="relative text-center text-xs text-slate-500 py-4 space-y-2">
+        <div>
+          v{APP_VERSION} - made by <span onClick={handleCreditTap}>Undone</span>
+        </div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" size="sm">初期化</Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>データを初期化しますか？</AlertDialogTitle>
+              <AlertDialogDescription>
+                ローカルに保存された撮影記録をすべて削除します。元に戻すことはできません。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>キャンセル</AlertDialogCancel>
+              <AlertDialogAction onClick={resetApp} className="bg-red-600 text-white hover:bg-red-700">初期化</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <span
           className={`absolute left-1/2 -translate-x-1/2 -top-2 text-pink-500 transition-opacity duration-700 ${showHearts ? 'opacity-100' : 'opacity-0'}`}
         >
