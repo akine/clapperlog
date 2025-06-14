@@ -64,6 +64,11 @@ function App() {
     const saved = localStorage.getItem('shooting-app-is-preparing')
     return saved === 'true'
   })
+  const [preparationStart, setPreparationStart] = useState(() => {
+    const saved = localStorage.getItem('shooting-app-preparation-start')
+    return saved ? parseInt(saved) : null
+  })
+  const [preparationDuration, setPreparationDuration] = useState(0)
   const [showAddScene, setShowAddScene] = useState(false)
   const [addMode, setAddMode] = useState('range')
   const [newSceneEnd, setNewSceneEnd] = useState('')
@@ -101,6 +106,14 @@ function App() {
     localStorage.setItem('shooting-app-is-preparing', isPreparing.toString())
   }, [isPreparing])
 
+  useEffect(() => {
+    if (preparationStart !== null) {
+      localStorage.setItem('shooting-app-preparation-start', preparationStart.toString())
+    } else {
+      localStorage.removeItem('shooting-app-preparation-start')
+    }
+  }, [preparationStart])
+
   // シーン追加機能
   const addRangeScenes = () => {
     if (!newSceneEnd || newSceneEnd < 1 || newSceneEnd > 99) return
@@ -124,30 +137,43 @@ function App() {
     setShowAddScene(false)
   }
 
+  const handleAddSceneClick = () => {
+    if (!showAddScene && !scenes.includes('サムネイル')) {
+      setScenes(prev => [...prev, 'サムネイル'])
+    }
+    setShowAddScene(prev => !prev)
+  }
+
   const startPreparing = () => {
     if (!selectedScene || isRecording) return
+    setPreparationStart(Date.now())
     setIsPreparing(true)
   }
 
   // 撮影記録機能
   const startRecording = () => {
     if (!selectedScene) return
-    
+
     const now = new Date()
     const startTime = now.toLocaleTimeString('ja-JP', { hour12: false })
-    
+
+    const prepDuration = preparationStart ? now.getTime() - preparationStart : 0
+
     setCurrentRecord({
       scene: selectedScene,
       startTime: startTime,
       startTimestamp: now.getTime(),
       pausedDuration: 0,
       pauseStartTime: null,
-      hasPauses: false
+      hasPauses: false,
+      preparationDuration: prepDuration
     })
 
     setIsRecording(true)
     setIsPaused(false)
     setIsPreparing(false)
+    setPreparationDuration(prepDuration)
+    setPreparationStart(null)
     
     // 使用したシーンを選択肢から削除
     setScenes(prev => prev.filter(scene => scene !== selectedScene))
@@ -198,6 +224,7 @@ function App() {
       startTime: currentRecord.startTime,
       endTime: endTime,
       duration: duration,
+      prepDuration: formatDuration(currentRecord.preparationDuration || 0),
       notes: currentRecord.hasPauses ? '中断あり' : '',
       timestamp: now.getTime()
     }
@@ -207,6 +234,8 @@ function App() {
     setIsRecording(false)
     setIsPaused(false)
     setIsPreparing(false)
+    setPreparationDuration(0)
+    setPreparationStart(null)
     setSelectedScene('')
   }
 
@@ -235,23 +264,27 @@ function App() {
     return formatDuration(Math.max(0, actualRecordingTime))
   }
 
+  const getPreparationElapsed = () => {
+    if (!isPreparing || !preparationStart) return '00:00:00'
+    return formatDuration(Date.now() - preparationStart)
+  }
+
   // リアルタイム更新のためのuseEffect
   const [currentTime, setCurrentTime] = useState(Date.now())
   
   useEffect(() => {
     const interval = setInterval(() => {
-      if (isRecording) {
+      if (isRecording || isPreparing) {
         setCurrentTime(Date.now())
       }
     }, 1000)
-    
+
     return () => clearInterval(interval)
-  }, [isRecording])
+  }, [isRecording, isPreparing])
 
   // ページ読み込み時の撮影状態復元
   useEffect(() => {
-    if (isRecording && currentRecord) {
-      // 撮影中の状態でページがリロードされた場合、タイマーを再開
+    if ((isRecording && currentRecord) || (isPreparing && preparationStart)) {
       setCurrentTime(Date.now())
     }
   }, [])
@@ -271,12 +304,13 @@ function App() {
       day: '2-digit'
     }).replace(/\//g, '-')
     
-    const headers = ['日付', 'シーン', '開始時刻', '終了時刻', '撮影時間', '備考']
+    const headers = ['日付', 'シーン', '開始時刻', '終了時刻', '段取り時間', '撮影時間', '備考']
     const csvData = records.map(record => [
       today,
       record.scene,
       record.startTime,
       record.endTime,
+      record.prepDuration,
       record.duration,
       record.notes
     ])
@@ -318,6 +352,7 @@ function App() {
     localStorage.removeItem('shooting-app-is-recording')
     localStorage.removeItem('shooting-app-is-paused')
     localStorage.removeItem('shooting-app-is-preparing')
+    localStorage.removeItem('shooting-app-preparation-start')
 
     setScenes([])
     setRecords([])
@@ -326,6 +361,8 @@ function App() {
     setIsRecording(false)
     setIsPaused(false)
     setIsPreparing(false)
+    setPreparationStart(null)
+    setPreparationDuration(0)
     setShowResetDialog(false)
   }
 
@@ -373,8 +410,8 @@ function App() {
             </div>
             
             <div className="flex items-end">
-              <Button 
-                onClick={() => setShowAddScene(!showAddScene)}
+              <Button
+                onClick={handleAddSceneClick}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 shadow-md"
                 disabled={isRecording}
               >
@@ -537,12 +574,15 @@ function App() {
                         : '待機中'}
                   </span>
                 </p>
+                  {isPreparing && (
+                    <p>段取り経過: <span className="text-slate-900 font-medium">{getPreparationElapsed()}</span></p>
+                  )}
                   {currentRecord && (
-                  <>
-                    <p>開始時刻: <span className="text-slate-900 font-medium">{currentRecord.startTime}</span></p>
-                    <p>経過時間: <span className="text-slate-900 font-medium">{getCurrentDuration()}</span></p>
-                  </>
-                )}
+                    <>
+                      <p>開始時刻: <span className="text-slate-900 font-medium">{currentRecord.startTime}</span></p>
+                      <p>経過時間: <span className="text-slate-900 font-medium">{getCurrentDuration()}</span></p>
+                    </>
+                  )}
               </div>
             </div>
           </div>
@@ -591,6 +631,7 @@ function App() {
                       <th className="pb-3 text-slate-700 font-medium">シーン</th>
                       <th className="pb-3 text-slate-700 font-medium">開始時刻</th>
                       <th className="pb-3 text-slate-700 font-medium">終了時刻</th>
+                      <th className="pb-3 text-slate-700 font-medium">段取り時間</th>
                       <th className="pb-3 text-slate-700 font-medium">撮影時間</th>
                       <th className="pb-3 text-slate-700 font-medium">備考</th>
                       <th className="pb-3 text-slate-700 font-medium">操作</th>
@@ -602,6 +643,7 @@ function App() {
                         <td className="py-3 text-slate-900 font-medium">{record.scene}</td>
                         <td className="py-3 text-slate-700">{record.startTime}</td>
                         <td className="py-3 text-slate-700">{record.endTime}</td>
+                        <td className="py-3 text-slate-700">{record.prepDuration}</td>
                         <td className="py-3 text-slate-700">{record.duration}</td>
                         <td className="py-3 text-slate-700">{record.notes}</td>
                         <td className="py-3">
@@ -641,6 +683,10 @@ function App() {
                       <div className="flex justify-between">
                         <span className="text-slate-600">終了時刻:</span>
                         <span className="text-slate-800">{record.endTime}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">段取り時間:</span>
+                        <span className="text-slate-800">{record.prepDuration}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-600">撮影時間:</span>
