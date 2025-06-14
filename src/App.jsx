@@ -74,6 +74,7 @@ function App() {
   const [newSceneEnd, setNewSceneEnd] = useState('')
   const [customSceneName, setCustomSceneName] = useState('')
   const [monologueName, setMonologueName] = useState('')
+  const [thumbnailAdded, setThumbnailAdded] = useState(false)
   const [creditTaps, setCreditTaps] = useState(0)
   const [showHearts, setShowHearts] = useState(false)
   const [showResetDialog, setShowResetDialog] = useState(false)
@@ -138,11 +139,11 @@ function App() {
     setShowAddScene(false)
   }
 
-  const addThumbnailScene = () => {
-    if (scenes.includes('サムネイル')) return
-
-    setScenes(prev => [...prev, 'サムネイル'])
-    setShowAddScene(false)
+  const handleThumbnailClick = () => {
+    if (!scenes.includes('サムネイル')) {
+      setScenes(prev => [...prev, 'サムネイル'])
+    }
+    setThumbnailAdded(true)
   }
 
   const addMonologueScene = () => {
@@ -155,7 +156,13 @@ function App() {
   }
 
   const handleAddSceneClick = () => {
-    setShowAddScene(prev => !prev)
+    setShowAddScene(prev => {
+      if (prev) {
+        setAddMode('range')
+        setThumbnailAdded(false)
+      }
+      return !prev
+    })
   }
 
   const startPreparing = () => {
@@ -460,10 +467,10 @@ function App() {
                   カスタム追加
                 </Button>
                 <Button
-                  onClick={() => setAddMode('thumbnail')}
+                  onClick={handleThumbnailClick}
                   className={`px-4 py-2 rounded-lg transition-all ${
-                    addMode === 'thumbnail'
-                      ? 'bg-blue-600 text-white shadow-md'
+                    thumbnailAdded
+                      ? 'bg-green-600 text-white shadow-md'
                       : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300'
                   }`}
                 >
@@ -522,15 +529,6 @@ function App() {
                   <Button
                     onClick={addCustomScene}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md"
-                  >
-                    追加
-                  </Button>
-                </div>
-              ) : addMode === 'thumbnail' ? (
-                <div className="flex gap-4 items-end">
-                  <Button
-                    onClick={addThumbnailScene}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-md"
                   >
                     追加
                   </Button>
