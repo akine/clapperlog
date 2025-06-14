@@ -73,6 +73,7 @@ function App() {
   const [addMode, setAddMode] = useState('range')
   const [newSceneEnd, setNewSceneEnd] = useState('')
   const [customSceneName, setCustomSceneName] = useState('')
+  const [monologueName, setMonologueName] = useState('')
   const [creditTaps, setCreditTaps] = useState(0)
   const [showHearts, setShowHearts] = useState(false)
   const [showResetDialog, setShowResetDialog] = useState(false)
@@ -137,10 +138,23 @@ function App() {
     setShowAddScene(false)
   }
 
+  const addThumbnailScene = () => {
+    if (scenes.includes('サムネイル')) return
+
+    setScenes(prev => [...prev, 'サムネイル'])
+    setShowAddScene(false)
+  }
+
+  const addMonologueScene = () => {
+    const name = monologueName.trim()
+    const sceneLabel = name ? `${name} - モノローグ` : 'モノローグ'
+
+    setScenes(prev => [...prev, sceneLabel])
+    setMonologueName('')
+    setShowAddScene(false)
+  }
+
   const handleAddSceneClick = () => {
-    if (!showAddScene && !scenes.includes('サムネイル')) {
-      setScenes(prev => [...prev, 'サムネイル'])
-    }
     setShowAddScene(prev => !prev)
   }
 
@@ -424,12 +438,12 @@ function App() {
           {/* シーン追加フォーム */}
           {showAddScene && (
             <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex gap-4 mb-4">
+              <div className="flex gap-4 mb-4 flex-wrap">
                 <Button
                   onClick={() => setAddMode('range')}
                   className={`px-4 py-2 rounded-lg transition-all ${
-                    addMode === 'range' 
-                      ? 'bg-blue-600 text-white shadow-md' 
+                    addMode === 'range'
+                      ? 'bg-blue-600 text-white shadow-md'
                       : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300'
                   }`}
                 >
@@ -438,12 +452,32 @@ function App() {
                 <Button
                   onClick={() => setAddMode('custom')}
                   className={`px-4 py-2 rounded-lg transition-all ${
-                    addMode === 'custom' 
-                      ? 'bg-blue-600 text-white shadow-md' 
+                    addMode === 'custom'
+                      ? 'bg-blue-600 text-white shadow-md'
                       : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300'
                   }`}
                 >
                   カスタム追加
+                </Button>
+                <Button
+                  onClick={() => setAddMode('thumbnail')}
+                  className={`px-4 py-2 rounded-lg transition-all ${
+                    addMode === 'thumbnail'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300'
+                  }`}
+                >
+                  サムネイル
+                </Button>
+                <Button
+                  onClick={() => setAddMode('monologue')}
+                  className={`px-4 py-2 rounded-lg transition-all ${
+                    addMode === 'monologue'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300'
+                  }`}
+                >
+                  モノローグ
                 </Button>
               </div>
 
@@ -471,6 +505,7 @@ function App() {
                   </Button>
                 </div>
               ) : (
+                addMode === 'custom' ? (
                 <div className="flex gap-4 items-end">
                   <div className="flex-1">
                     <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -484,8 +519,38 @@ function App() {
                       placeholder="例: 緊急リテイク"
                     />
                   </div>
-                  <Button 
+                  <Button
                     onClick={addCustomScene}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md"
+                  >
+                    追加
+                  </Button>
+                </div>
+              ) : addMode === 'thumbnail' ? (
+                <div className="flex gap-4 items-end">
+                  <Button
+                    onClick={addThumbnailScene}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-md"
+                  >
+                    追加
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-4 items-end">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      人物名
+                    </label>
+                    <input
+                      type="text"
+                      value={monologueName}
+                      onChange={(e) => setMonologueName(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 shadow-sm"
+                      placeholder="例: 小城"
+                    />
+                  </div>
+                  <Button
+                    onClick={addMonologueScene}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md"
                   >
                     追加
