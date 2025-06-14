@@ -38,7 +38,7 @@ function App() {
   // 状態管理
   const [scenes, setScenes] = useState(() => {
     const saved = localStorage.getItem('shooting-app-scenes')
-    return saved ? JSON.parse(saved) : ['サムネイル撮影', 'モノローグ']
+    return saved ? JSON.parse(saved) : []
   })
   const [records, setRecords] = useState(() => {
     const saved = localStorage.getItem('shooting-app-records')
@@ -58,6 +58,10 @@ function App() {
   })
   const [isPaused, setIsPaused] = useState(() => {
     const saved = localStorage.getItem('shooting-app-is-paused')
+    return saved === 'true'
+  })
+  const [isPreparing, setIsPreparing] = useState(() => {
+    const saved = localStorage.getItem('shooting-app-is-preparing')
     return saved === 'true'
   })
   const [showAddScene, setShowAddScene] = useState(false)
@@ -93,6 +97,10 @@ function App() {
     localStorage.setItem('shooting-app-is-paused', isPaused.toString())
   }, [isPaused])
 
+  useEffect(() => {
+    localStorage.setItem('shooting-app-is-preparing', isPreparing.toString())
+  }, [isPreparing])
+
   // シーン追加機能
   const addRangeScenes = () => {
     if (!newSceneEnd || newSceneEnd < 1 || newSceneEnd > 99) return
@@ -110,10 +118,15 @@ function App() {
 
   const addCustomScene = () => {
     if (!customSceneName.trim()) return
-    
+
     setScenes(prev => [...prev, customSceneName.trim()])
     setCustomSceneName('')
     setShowAddScene(false)
+  }
+
+  const startPreparing = () => {
+    if (!selectedScene || isRecording) return
+    setIsPreparing(true)
   }
 
   // 撮影記録機能
@@ -131,9 +144,10 @@ function App() {
       pauseStartTime: null,
       hasPauses: false
     })
-    
+
     setIsRecording(true)
     setIsPaused(false)
+    setIsPreparing(false)
     
     // 使用したシーンを選択肢から削除
     setScenes(prev => prev.filter(scene => scene !== selectedScene))
@@ -192,6 +206,7 @@ function App() {
     setCurrentRecord(null)
     setIsRecording(false)
     setIsPaused(false)
+    setIsPreparing(false)
     setSelectedScene('')
   }
 
@@ -302,13 +317,15 @@ function App() {
     localStorage.removeItem('shooting-app-selected-scene')
     localStorage.removeItem('shooting-app-is-recording')
     localStorage.removeItem('shooting-app-is-paused')
+    localStorage.removeItem('shooting-app-is-preparing')
 
-    setScenes(['サムネイル撮影', 'モノローグ'])
+    setScenes([])
     setRecords([])
     setCurrentRecord(null)
     setSelectedScene('')
     setIsRecording(false)
     setIsPaused(false)
+    setIsPreparing(false)
     setShowResetDialog(false)
   }
 
@@ -453,6 +470,13 @@ function App() {
             <div>
               <div className="flex gap-3 mb-4">
                 <Button
+                  onClick={startPreparing}
+                  disabled={!selectedScene || isRecording || isPreparing}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                >
+                  段取り開始
+                </Button>
+                <Button
                   onClick={startRecording}
                   disabled={!selectedScene || isRecording}
                   className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
@@ -494,15 +518,23 @@ function App() {
               <h3 className="text-lg font-medium text-slate-800 mb-2">現在の状況</h3>
               <div className="space-y-2 text-slate-700">
                 <p>選択シーン: <span className="text-slate-900 font-medium">{selectedScene || '未選択'}</span></p>
-                <p>撮影状態: 
+                <p>撮影状態:
                   <span className={`ml-2 px-2 py-1 rounded text-sm font-medium ${
-                    isRecording 
-                      ? isPaused 
-                        ? 'bg-orange-100 text-orange-800 animate-pulse' 
+                    isRecording
+                      ? isPaused
+                        ? 'bg-orange-100 text-orange-800 animate-pulse'
                         : 'bg-green-100 text-green-800 animate-pulse'
-                      : 'bg-slate-100 text-slate-600'
+                      : isPreparing
+                        ? 'bg-yellow-100 text-yellow-800 animate-pulse'
+                        : 'bg-slate-100 text-slate-600'
                   }`}>
-                    {isRecording ? (isPaused ? '一時停止中' : '撮影中') : '待機中'}
+                    {isRecording
+                      ? isPaused
+                        ? '一時停止中'
+                        : '撮影中'
+                      : isPreparing
+                        ? '段取り中'
+                        : '待機中'}
                   </span>
                 </p>
                   {currentRecord && (
