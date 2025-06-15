@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Play,
   Pause,
@@ -176,7 +176,8 @@ function App() {
   const [addMode, setAddMode] = useState('range')
   const [newSceneEnd, setNewSceneEnd] = useState('')
   const [customSceneName, setCustomSceneName] = useState('')
-  const [monologueName, setMonologueName] = useState('')
+  const [monologueInput, setMonologueInput] = useState('')
+  const touchStartX = useRef(0)
   const [monologueAdded, setMonologueAdded] = useState(() => {
     const saved = localStorage.getItem('shooting-app-scenes')
     if (!saved) return false
@@ -209,10 +210,10 @@ function App() {
   })
 
   useEffect(() => {
-    if (addMode === 'monologue' && showAddScene && !monologueAdded) {
+    if (showAddScene && !monologueAdded) {
       setMonologuePlaceholder(getRandomDirector())
     }
-  }, [addMode, showAddScene, monologueAdded])
+  }, [showAddScene, monologueAdded])
 
   // ローカルストレージへの保存
   useEffect(() => {
@@ -294,26 +295,45 @@ function App() {
     })
   }
 
-  const addMonologueScene = () => {
+  const toggleMonologueScene = () => {
     if (!monologueAdded) {
-      const name = monologueName.trim()
+      const name = monologueInput.trim()
       const sceneName = name ? `${name} - モノローグ` : 'モノローグ'
       setScenes(prev => [...prev, sceneName])
       setMonologueScene(sceneName)
       setMonologueAdded(true)
-      setMonologueName('')
-      setShowAddScene(false)
-      setAddMode('range')
+      setMonologueInput('')
     } else {
-      setScenes(prev => prev.filter((s) => s !== monologueScene))
-      setMonologueAdded(false)
-      setMonologueScene('')
-      setMonologueName('')
+      if (window.confirm(`${monologueScene}を消しますか？`)) {
+        setScenes(prev => prev.filter((s) => s !== monologueScene))
+        setMonologueAdded(false)
+        setMonologueScene('')
+      }
+    }
+  }
+
+  const removeScene = (scene) => {
+    if (window.confirm(`${scene}を消しますか？`)) {
+      setScenes(prev => prev.filter((s) => s !== scene))
+      if (selectedScene === scene) {
+        setSelectedScene('')
+      }
+    }
+  }
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = (scene) => (e) => {
+    const diff = e.changedTouches[0].clientX - touchStartX.current
+    if (Math.abs(diff) > 50) {
+      removeScene(scene)
     }
   }
 
   const startSetup = () => {
-    if (isSettingUp || isRecording) return
+    if (!selectedScene || isSettingUp || isRecording) return
     const now = Date.now()
     setIsSettingUp(true)
     setSetupStartTime(now)
@@ -630,9 +650,9 @@ function App() {
                   サムネイル
                 </Button>
                 <Button
-                  onClick={() => setAddMode('monologue')}
+                  onClick={toggleMonologueScene}
                   className={`px-4 py-2 rounded-lg transition-all ${
-                    addMode === 'monologue' || monologueAdded
+                    monologueAdded
                       ? 'bg-green-600 text-white shadow-md'
                       : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300'
                   }`}
@@ -657,14 +677,14 @@ function App() {
                       placeholder="例: 10"
                     />
                   </div>
-                  <Button 
+                  <Button
                     onClick={addRangeScenes}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md"
                   >
                     追加
                   </Button>
                 </div>
-              ) : addMode === 'custom' ? (
+              ) : (
                 <div className="flex gap-4 items-end">
                   <div className="flex-1">
                     <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -678,38 +698,30 @@ function App() {
                       placeholder="例: 緊急リテイク"
                     />
                   </div>
-                  <Button 
+                  <Button
                     onClick={addCustomScene}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md"
                   >
                     追加
                   </Button>
                 </div>
-              ) : (
-                <div className="flex gap-4 items-end">
+              )}
+
+              {!monologueAdded && (
+                <div className="flex gap-4 items-end mt-4">
                   <div className="flex-1">
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      人物名（任意）
+                      モノローグ人物名（任意）
                     </label>
                     <input
                       type="text"
-                      value={monologueName}
-                      onChange={(e) => setMonologueName(e.target.value)}
-                      disabled={monologueAdded}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 shadow-sm disabled:bg-slate-100"
+                      value={monologueInput}
+                      onChange={(e) => setMonologueInput(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 shadow-sm"
                       placeholder={monologuePlaceholder}
                     />
                   </div>
-                  <Button
-                    onClick={addMonologueScene}
-                    className={`px-4 py-2 rounded-lg shadow-md ${
-                      monologueAdded
-                        ? 'bg-red-600 hover:bg-red-700 text-white'
-                        : 'bg-green-600 hover:bg-green-700 text-white'
-                    }`}
-                  >
-                    {monologueAdded ? '削除' : '追加'}
-                  </Button>
+                  <p className="text-slate-700">ボタンを押して追加</p>
                 </div>
               )}
             </div>
@@ -728,7 +740,7 @@ function App() {
               <div className="flex gap-3 mb-4">
                 <Button
                   onClick={startSetup}
-                  disabled={isSettingUp || isRecording}
+                  disabled={!selectedScene || isSettingUp || isRecording}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                 >
                   <Timer className="w-5 h-5 mr-2" />
@@ -929,6 +941,28 @@ function App() {
             </>
           )}
         </div>
+
+        {scenes.length > 0 && (
+          <ul className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+            {scenes.map((scene) => (
+              <li
+                key={scene}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd(scene)}
+                className="relative bg-blue-50 border border-blue-200 rounded px-2 py-1 text-slate-800 flex items-center justify-between"
+              >
+                <span>{scene}</span>
+                <button
+                  type="button"
+                  onClick={() => removeScene(scene)}
+                  className="ml-2 text-red-600"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <footer className="relative text-center text-xs text-slate-500 py-4 space-y-2">
         <div>
