@@ -35,6 +35,117 @@ import './App.css'
 
 const APP_VERSION = __APP_VERSION__
 
+const DIRECTOR_NAMES = [
+  '小津安二郎',
+  '黒澤明',
+  '溝口健二',
+  '成瀬巳喜男',
+  '今村昌平',
+  '新藤兼人',
+  '山田洋次',
+  '伊丹十三',
+  '大林宣彦',
+  '是枝裕和',
+  '園子温',
+  '中島哲也',
+  '石井裕也',
+  '庵野秀明',
+  '河瀬直美',
+  '岩井俊二',
+  '瀬々敬久',
+  '白石和彌',
+  '佐藤信介',
+  '三池崇史',
+  '塚本晋也',
+  '原田眞人',
+  '森達也',
+  '真利子哲也',
+  '荒井晴彦',
+  '山下敦弘',
+  '上田慎一郎',
+  '奥山和由',
+  '内田けんじ',
+  '平山秀幸',
+  '西川美和',
+  '黒沢清',
+  '青山真治',
+  'スタンリー・キューブリック',
+  'アルフレッド・ヒッチコック',
+  'オーソン・ウェルズ',
+  'ジャン＝リュック・ゴダール',
+  'フランソワ・トリュフォー',
+  'イングマール・ベルイマン',
+  'フェデリコ・フェリーニ',
+  'アンドレイ・タルコフスキー',
+  'サタジット・レイ',
+  'セルゲイ・エイゼンシュテイン',
+  'アキ・カウリスマキ',
+  'クリス・マルケル',
+  'クリストファー・ノーラン',
+  'クエンティン・タランティーノ',
+  'ジェームズ・キャメロン',
+  'スティーヴン・スピルバーグ',
+  'リドリー・スコット',
+  'ピーター・ジャクソン',
+  'ジョージ・ルーカス',
+  'ザック・スナイダー',
+  'J・J・エイブラムス',
+  'マイケル・ベイ',
+  'デヴィッド・フィンチャー',
+  'マーティン・スコセッシ',
+  'デニス・ヴィルヌーヴ',
+  'ロバート・ゼメキス',
+  'ジョン・ラセター',
+  'ブラッド・バード',
+  'アン・リー',
+  'ローランド・エメリッヒ',
+  'ジョーダン・ピール',
+  'サム・メンデス',
+  'マット・リーヴス',
+  'ウェス・アンダーソン',
+  'ソフィア・コッポラ',
+  'グレタ・ガーウィグ',
+  'ノア・バームバック',
+  'アリ・アスター',
+  'ロバート・エガース',
+  'ケリー・ライカート',
+  'アンドレア・アーノルド',
+  'ルカ・グァダニーノ',
+  'アリーチェ・ロルヴァケル',
+  'クレール・ドニ',
+  'チャン・イーモウ',
+  'パク・チャヌク',
+  'ハン・ジェリム',
+  'ジョン・ラセター',
+  '宮崎駿',
+  '高畑勲',
+  '細田守',
+  '新海誠',
+  '湯浅政明',
+  '今敏',
+  '大地丙太郎',
+  '押井守',
+  '渡辺信一郎',
+  '山本沙代',
+  'ピート・ドクター',
+  'トム・ムーア',
+  'ヘンリー・セリック',
+  'ティム・バートン',
+  'ガス・ヴァン・サント',
+  'ラース・フォン・トリアー',
+  'ニコラス・ウィンディング・レフン',
+  'デヴィッド・リンチ',
+  'ジム・ジャームッシュ',
+  'アレハンドロ・ホドロフスキー',
+  'グレッグ・アラキ',
+  'アベル・フェラーラ',
+  'ジョン・ウォーターズ',
+  '須田剛一'
+]
+
+const getRandomDirector = () =>
+  DIRECTOR_NAMES[Math.floor(Math.random() * DIRECTOR_NAMES.length)]
+
 function App() {
   // 状態管理
   const [scenes, setScenes] = useState(() => {
@@ -66,7 +177,25 @@ function App() {
   const [newSceneEnd, setNewSceneEnd] = useState('')
   const [customSceneName, setCustomSceneName] = useState('')
   const [monologueName, setMonologueName] = useState('')
-  const [thumbnailAdded, setThumbnailAdded] = useState(false)
+  const [monologueAdded, setMonologueAdded] = useState(() => {
+    const saved = localStorage.getItem('shooting-app-scenes')
+    if (!saved) return false
+    const list = JSON.parse(saved)
+    return list.some((s) => s.endsWith('モノローグ'))
+  })
+  const [monologueScene, setMonologueScene] = useState(() => {
+    const saved = localStorage.getItem('shooting-app-scenes')
+    if (!saved) return ''
+    const list = JSON.parse(saved)
+    const found = list.find((s) => s.endsWith('モノローグ'))
+    return found || ''
+  })
+  const [monologuePlaceholder, setMonologuePlaceholder] = useState(getRandomDirector())
+  const [thumbnailAdded, setThumbnailAdded] = useState(() => {
+    const saved = localStorage.getItem('shooting-app-scenes')
+    if (!saved) return false
+    return JSON.parse(saved).includes('サムネイル')
+  })
   const [creditTaps, setCreditTaps] = useState(0)
   const [showHearts, setShowHearts] = useState(false)
   const [showResetDialog, setShowResetDialog] = useState(false)
@@ -79,9 +208,27 @@ function App() {
     return saved ? parseInt(saved) : null
   })
 
+  useEffect(() => {
+    if (addMode === 'monologue' && showAddScene && !monologueAdded) {
+      setMonologuePlaceholder(getRandomDirector())
+    }
+  }, [addMode, showAddScene, monologueAdded])
+
   // ローカルストレージへの保存
   useEffect(() => {
     localStorage.setItem('shooting-app-scenes', JSON.stringify(scenes))
+  }, [scenes])
+
+  useEffect(() => {
+    setThumbnailAdded(scenes.includes('サムネイル'))
+    const found = scenes.find((s) => s.endsWith('モノローグ'))
+    if (found) {
+      setMonologueAdded(true)
+      setMonologueScene(found)
+    } else {
+      setMonologueAdded(false)
+      setMonologueScene('')
+    }
   }, [scenes])
 
   useEffect(() => {
@@ -139,17 +286,30 @@ function App() {
   }
 
   const addThumbnailScene = () => {
-    setScenes(prev => [...prev, 'サムネイル'])
-    setThumbnailAdded(true)
+    setScenes(prev => {
+      if (prev.includes('サムネイル')) {
+        return prev.filter((s) => s !== 'サムネイル')
+      }
+      return [...prev, 'サムネイル']
+    })
   }
 
   const addMonologueScene = () => {
-    const name = monologueName.trim()
-    const sceneName = name ? `${name} - モノローグ` : 'モノローグ'
-    setScenes(prev => [...prev, sceneName])
-    setMonologueName('')
-    setShowAddScene(false)
-    setAddMode('range')
+    if (!monologueAdded) {
+      const name = monologueName.trim()
+      const sceneName = name ? `${name} - モノローグ` : 'モノローグ'
+      setScenes(prev => [...prev, sceneName])
+      setMonologueScene(sceneName)
+      setMonologueAdded(true)
+      setMonologueName('')
+      setShowAddScene(false)
+      setAddMode('range')
+    } else {
+      setScenes(prev => prev.filter((s) => s !== monologueScene))
+      setMonologueAdded(false)
+      setMonologueScene('')
+      setMonologueName('')
+    }
   }
 
   const startSetup = () => {
@@ -373,6 +533,10 @@ function App() {
     setIsPaused(false)
     setIsSettingUp(false)
     setSetupStartTime(null)
+    setThumbnailAdded(false)
+    setMonologueAdded(false)
+    setMonologueScene('')
+    setMonologueName('')
     setShowResetDialog(false)
   }
 
@@ -468,7 +632,7 @@ function App() {
                 <Button
                   onClick={() => setAddMode('monologue')}
                   className={`px-4 py-2 rounded-lg transition-all ${
-                    addMode === 'monologue'
+                    addMode === 'monologue' || monologueAdded
                       ? 'bg-green-600 text-white shadow-md'
                       : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300'
                   }`}
@@ -531,15 +695,20 @@ function App() {
                       type="text"
                       value={monologueName}
                       onChange={(e) => setMonologueName(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 shadow-sm"
-                      placeholder="例: 小城"
+                      disabled={monologueAdded}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 shadow-sm disabled:bg-slate-100"
+                      placeholder={monologuePlaceholder}
                     />
                   </div>
                   <Button
                     onClick={addMonologueScene}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-md"
+                    className={`px-4 py-2 rounded-lg shadow-md ${
+                      monologueAdded
+                        ? 'bg-red-600 hover:bg-red-700 text-white'
+                        : 'bg-green-600 hover:bg-green-700 text-white'
+                    }`}
                   >
-                    追加
+                    {monologueAdded ? '削除' : '追加'}
                   </Button>
                 </div>
               )}
