@@ -38,7 +38,7 @@ function App() {
   // 状態管理
   const [scenes, setScenes] = useState(() => {
     const saved = localStorage.getItem('shooting-app-scenes')
-    return saved ? JSON.parse(saved) : ['サムネイル撮影', 'モノローグ']
+    return saved ? JSON.parse(saved) : []
   })
   const [records, setRecords] = useState(() => {
     const saved = localStorage.getItem('shooting-app-records')
@@ -60,10 +60,21 @@ function App() {
     const saved = localStorage.getItem('shooting-app-is-paused')
     return saved === 'true'
   })
+  const [isSettingUp, setIsSettingUp] = useState(() => {
+    const saved = localStorage.getItem('shooting-app-is-setting-up')
+    return saved === 'true'
+  })
+  const [setupStartTime, setSetupStartTime] = useState(() => {
+    const saved = localStorage.getItem('shooting-app-setup-start-time')
+    return saved ? Number(saved) : null
+  })
   const [showAddScene, setShowAddScene] = useState(false)
   const [addMode, setAddMode] = useState('range')
   const [newSceneEnd, setNewSceneEnd] = useState('')
   const [customSceneName, setCustomSceneName] = useState('')
+  const [thumbnailSelected, setThumbnailSelected] = useState(false)
+  const [monologueSelected, setMonologueSelected] = useState(false)
+  const [monologueName, setMonologueName] = useState('')
   const [creditTaps, setCreditTaps] = useState(0)
   const [showHearts, setShowHearts] = useState(false)
   const [showResetDialog, setShowResetDialog] = useState(false)
@@ -93,6 +104,18 @@ function App() {
     localStorage.setItem('shooting-app-is-paused', isPaused.toString())
   }, [isPaused])
 
+  useEffect(() => {
+    localStorage.setItem('shooting-app-is-setting-up', isSettingUp.toString())
+  }, [isSettingUp])
+
+  useEffect(() => {
+    if (setupStartTime !== null) {
+      localStorage.setItem('shooting-app-setup-start-time', setupStartTime.toString())
+    } else {
+      localStorage.removeItem('shooting-app-setup-start-time')
+    }
+  }, [setupStartTime])
+
   // シーン追加機能
   const addRangeScenes = () => {
     if (!newSceneEnd || newSceneEnd < 1 || newSceneEnd > 99) return
@@ -110,28 +133,82 @@ function App() {
 
   const addCustomScene = () => {
     if (!customSceneName.trim()) return
-    
+
     setScenes(prev => [...prev, customSceneName.trim()])
     setCustomSceneName('')
     setShowAddScene(false)
   }
 
+  const toggleThumbnail = () => {
+    setThumbnailSelected(prev => {
+      const next = !prev
+      setScenes(scenes => {
+        if (next) {
+          return scenes.includes('サムネイル') ? scenes : [...scenes, 'サムネイル']
+        }
+        return scenes.filter(scene => scene !== 'サムネイル')
+      })
+      return next
+    })
+  }
+
+  const toggleMonologue = () => {
+    const sceneName = monologueName.trim()
+      ? `${monologueName.trim()} - モノローグ`
+      : 'モノローグ'
+
+    setMonologueSelected(prev => {
+      const next = !prev
+      setScenes(scenes => {
+        // remove any previous monologue scenes
+        const filtered = scenes.filter(scene => !scene.endsWith(' - モノローグ') && scene !== 'モノローグ')
+        if (next) {
+          return [...filtered, sceneName]
+        }
+        return filtered
+      })
+      return next
+    })
+  }
+
+  useEffect(() => {
+    if (monologueSelected) {
+      const sceneName = monologueName.trim()
+        ? `${monologueName.trim()} - モノローグ`
+        : 'モノローグ'
+      setScenes(scenes => {
+        const filtered = scenes.filter(scene => !scene.endsWith(' - モノローグ') && scene !== 'モノローグ')
+        return [...filtered, sceneName]
+      })
+    }
+  }, [monologueName])
+
   // 撮影記録機能
+  const startSetup = () => {
+    if (!selectedScene || isSettingUp || isRecording) return
+    setIsSettingUp(true)
+    setSetupStartTime(Date.now())
+  }
+
   const startRecording = () => {
     if (!selectedScene) return
-    
+
     const now = new Date()
     const startTime = now.toLocaleTimeString('ja-JP', { hour12: false })
-    
+    const setupDurationMs = setupStartTime ? now.getTime() - setupStartTime : 0
+
     setCurrentRecord({
       scene: selectedScene,
       startTime: startTime,
       startTimestamp: now.getTime(),
       pausedDuration: 0,
       pauseStartTime: null,
-      hasPauses: false
+      hasPauses: false,
+      setupDuration: formatDuration(setupDurationMs)
     })
-    
+
+    setIsSettingUp(false)
+    setSetupStartTime(null)
     setIsRecording(true)
     setIsPaused(false)
     
@@ -184,6 +261,7 @@ function App() {
       startTime: currentRecord.startTime,
       endTime: endTime,
       duration: duration,
+      setupDuration: currentRecord.setupDuration,
       notes: currentRecord.hasPauses ? '中断あり' : '',
       timestamp: now.getTime()
     }
@@ -192,6 +270,8 @@ function App() {
     setCurrentRecord(null)
     setIsRecording(false)
     setIsPaused(false)
+    setIsSettingUp(false)
+    setSetupStartTime(null)
     setSelectedScene('')
   }
 
@@ -220,23 +300,29 @@ function App() {
     return formatDuration(Math.max(0, actualRecordingTime))
   }
 
+  const getSetupDuration = () => {
+    if (!isSettingUp || setupStartTime === null) return '00:00:00'
+    const now = Date.now()
+    return formatDuration(now - setupStartTime)
+  }
+
   // リアルタイム更新のためのuseEffect
   const [currentTime, setCurrentTime] = useState(Date.now())
   
   useEffect(() => {
     const interval = setInterval(() => {
-      if (isRecording) {
+      if (isRecording || isSettingUp) {
         setCurrentTime(Date.now())
       }
     }, 1000)
-    
+
     return () => clearInterval(interval)
-  }, [isRecording])
+  }, [isRecording, isSettingUp])
 
   // ページ読み込み時の撮影状態復元
   useEffect(() => {
-    if (isRecording && currentRecord) {
-      // 撮影中の状態でページがリロードされた場合、タイマーを再開
+    if ((isRecording && currentRecord) || isSettingUp) {
+      // 撮影中または段取り中の状態でページがリロードされた場合、タイマーを再開
       setCurrentTime(Date.now())
     }
   }, [])
@@ -256,13 +342,14 @@ function App() {
       day: '2-digit'
     }).replace(/\//g, '-')
     
-    const headers = ['日付', 'シーン', '開始時刻', '終了時刻', '撮影時間', '備考']
+    const headers = ['日付', 'シーン', '開始時刻', '終了時刻', '撮影時間', '段取り時間', '備考']
     const csvData = records.map(record => [
       today,
       record.scene,
       record.startTime,
       record.endTime,
       record.duration,
+      record.setupDuration,
       record.notes
     ])
     
@@ -302,13 +389,17 @@ function App() {
     localStorage.removeItem('shooting-app-selected-scene')
     localStorage.removeItem('shooting-app-is-recording')
     localStorage.removeItem('shooting-app-is-paused')
+    localStorage.removeItem('shooting-app-is-setting-up')
+    localStorage.removeItem('shooting-app-setup-start-time')
 
-    setScenes(['サムネイル撮影', 'モノローグ'])
+    setScenes([])
     setRecords([])
     setCurrentRecord(null)
     setSelectedScene('')
     setIsRecording(false)
     setIsPaused(false)
+    setIsSettingUp(false)
+    setSetupStartTime(null)
     setShowResetDialog(false)
   }
 
@@ -370,12 +461,12 @@ function App() {
           {/* シーン追加フォーム */}
           {showAddScene && (
             <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex gap-4 mb-4">
+              <div className="flex gap-4 items-center mb-4">
                 <Button
                   onClick={() => setAddMode('range')}
                   className={`px-4 py-2 rounded-lg transition-all ${
-                    addMode === 'range' 
-                      ? 'bg-blue-600 text-white shadow-md' 
+                    addMode === 'range'
+                      ? 'bg-blue-600 text-white shadow-md'
                       : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300'
                   }`}
                 >
@@ -384,13 +475,44 @@ function App() {
                 <Button
                   onClick={() => setAddMode('custom')}
                   className={`px-4 py-2 rounded-lg transition-all ${
-                    addMode === 'custom' 
-                      ? 'bg-blue-600 text-white shadow-md' 
+                    addMode === 'custom'
+                      ? 'bg-blue-600 text-white shadow-md'
                       : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300'
                   }`}
                 >
                   カスタム追加
                 </Button>
+                <span className="text-slate-300 select-none">|</span>
+                <Button
+                  onClick={toggleThumbnail}
+                  className={`px-4 py-2 rounded-lg transition-all ${
+                    thumbnailSelected
+                      ? 'bg-green-600 text-white shadow-md'
+                      : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300'
+                  }`}
+                >
+                  サムネイル
+                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={toggleMonologue}
+                    className={`px-4 py-2 rounded-lg transition-all ${
+                      monologueSelected
+                        ? 'bg-green-600 text-white shadow-md'
+                        : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300'
+                    }`}
+                  >
+                    モノローグ
+                  </Button>
+                  <input
+                    type="text"
+                    value={monologueName}
+                    onChange={(e) => setMonologueName(e.target.value)}
+                    className="px-2 py-1 border border-slate-300 rounded"
+                    placeholder="人物名"
+                    disabled={!monologueSelected}
+                  />
+                </div>
               </div>
 
               {addMode === 'range' ? (
@@ -451,7 +573,15 @@ function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <div className="flex gap-3 mb-4">
+            <div className="flex gap-3 mb-4">
+                <Button
+                  onClick={startSetup}
+                  disabled={!selectedScene || isSettingUp || isRecording}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                >
+                  <RotateCw className="w-5 h-5 mr-2" />
+                  段取り開始
+                </Button>
                 <Button
                   onClick={startRecording}
                   disabled={!selectedScene || isRecording}
@@ -494,18 +624,29 @@ function App() {
               <h3 className="text-lg font-medium text-slate-800 mb-2">現在の状況</h3>
               <div className="space-y-2 text-slate-700">
                 <p>選択シーン: <span className="text-slate-900 font-medium">{selectedScene || '未選択'}</span></p>
-                <p>撮影状態: 
+                <p>撮影状態:
                   <span className={`ml-2 px-2 py-1 rounded text-sm font-medium ${
-                    isRecording 
-                      ? isPaused 
-                        ? 'bg-orange-100 text-orange-800 animate-pulse' 
+                    isRecording
+                      ? isPaused
+                        ? 'bg-orange-100 text-orange-800 animate-pulse'
                         : 'bg-green-100 text-green-800 animate-pulse'
-                      : 'bg-slate-100 text-slate-600'
+                      : isSettingUp
+                        ? 'bg-yellow-100 text-yellow-800 animate-pulse'
+                        : 'bg-slate-100 text-slate-600'
                   }`}>
-                    {isRecording ? (isPaused ? '一時停止中' : '撮影中') : '待機中'}
+                    {isRecording
+                      ? isPaused
+                        ? '一時停止中'
+                        : '撮影中'
+                      : isSettingUp
+                        ? '段取り中'
+                        : '待機中'}
                   </span>
                 </p>
-                  {currentRecord && (
+                {isSettingUp && (
+                  <p>段取り経過: <span className="text-slate-900 font-medium">{getSetupDuration()}</span></p>
+                )}
+                {currentRecord && (
                   <>
                     <p>開始時刻: <span className="text-slate-900 font-medium">{currentRecord.startTime}</span></p>
                     <p>経過時間: <span className="text-slate-900 font-medium">{getCurrentDuration()}</span></p>
@@ -560,6 +701,7 @@ function App() {
                       <th className="pb-3 text-slate-700 font-medium">開始時刻</th>
                       <th className="pb-3 text-slate-700 font-medium">終了時刻</th>
                       <th className="pb-3 text-slate-700 font-medium">撮影時間</th>
+                      <th className="pb-3 text-slate-700 font-medium">段取り時間</th>
                       <th className="pb-3 text-slate-700 font-medium">備考</th>
                       <th className="pb-3 text-slate-700 font-medium">操作</th>
                     </tr>
@@ -571,6 +713,7 @@ function App() {
                         <td className="py-3 text-slate-700">{record.startTime}</td>
                         <td className="py-3 text-slate-700">{record.endTime}</td>
                         <td className="py-3 text-slate-700">{record.duration}</td>
+                        <td className="py-3 text-slate-700">{record.setupDuration}</td>
                         <td className="py-3 text-slate-700">{record.notes}</td>
                         <td className="py-3">
                           <Button
@@ -613,6 +756,10 @@ function App() {
                       <div className="flex justify-between">
                         <span className="text-slate-600">撮影時間:</span>
                         <span className="text-slate-800">{record.duration}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">段取り時間:</span>
+                        <span className="text-slate-800">{record.setupDuration}</span>
                       </div>
                       {record.notes && (
                         <div className="flex justify-between">
