@@ -389,13 +389,17 @@ function App() {
     localStorage.removeItem('shooting-app-selected-scene')
     localStorage.removeItem('shooting-app-is-recording')
     localStorage.removeItem('shooting-app-is-paused')
+    localStorage.removeItem('shooting-app-is-setting-up')
+    localStorage.removeItem('shooting-app-setup-start-time')
 
-    setScenes(['サムネイル撮影', 'モノローグ'])
+    setScenes([])
     setRecords([])
     setCurrentRecord(null)
     setSelectedScene('')
     setIsRecording(false)
     setIsPaused(false)
+    setIsSettingUp(false)
+    setSetupStartTime(null)
     setShowResetDialog(false)
   }
 
@@ -457,7 +461,7 @@ function App() {
           {/* シーン追加フォーム */}
           {showAddScene && (
             <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex gap-4 mb-4">
+              <div className="flex gap-4 items-center mb-4">
                 <Button
                   onClick={() => setAddMode('range')}
                   className={`px-4 py-2 rounded-lg transition-all ${
@@ -478,6 +482,7 @@ function App() {
                 >
                   カスタム追加
                 </Button>
+                <span className="text-slate-300 select-none">|</span>
                 <Button
                   onClick={toggleThumbnail}
                   className={`px-4 py-2 rounded-lg transition-all ${
