@@ -11,6 +11,7 @@ import {
   MoreVertical,
   RotateCw,
 } from 'lucide-react'
+import { useLocalStorageBatch } from '@/hooks/useLocalStorageBatch.js'
 import { Button } from '@/components/ui/button.jsx'
 import {
   DropdownMenu,
@@ -79,42 +80,17 @@ function App() {
   const [showHearts, setShowHearts] = useState(false)
   const [showResetDialog, setShowResetDialog] = useState(false)
 
-  // ローカルストレージへの保存
-  useEffect(() => {
-    localStorage.setItem('shooting-app-scenes', JSON.stringify(scenes))
-  }, [scenes])
-
-  useEffect(() => {
-    localStorage.setItem('shooting-app-records', JSON.stringify(records))
-  }, [records])
-
-  useEffect(() => {
-    localStorage.setItem('shooting-app-current-record', JSON.stringify(currentRecord))
-  }, [currentRecord])
-
-  useEffect(() => {
-    localStorage.setItem('shooting-app-selected-scene', selectedScene)
-  }, [selectedScene])
-
-  useEffect(() => {
-    localStorage.setItem('shooting-app-is-recording', isRecording.toString())
-  }, [isRecording])
-
-  useEffect(() => {
-    localStorage.setItem('shooting-app-is-paused', isPaused.toString())
-  }, [isPaused])
-
-  useEffect(() => {
-    localStorage.setItem('shooting-app-is-setting-up', isSettingUp.toString())
-  }, [isSettingUp])
-
-  useEffect(() => {
-    if (setupStartTime !== null) {
-      localStorage.setItem('shooting-app-setup-start-time', setupStartTime.toString())
-    } else {
-      localStorage.removeItem('shooting-app-setup-start-time')
-    }
-  }, [setupStartTime])
+  // ローカルストレージへの保存（バッチ処理で最適化）
+  useLocalStorageBatch({
+    'shooting-app-scenes': scenes,
+    'shooting-app-records': records,
+    'shooting-app-current-record': currentRecord,
+    'shooting-app-selected-scene': selectedScene,
+    'shooting-app-is-recording': isRecording.toString(),
+    'shooting-app-is-paused': isPaused.toString(),
+    'shooting-app-is-setting-up': isSettingUp.toString(),
+    'shooting-app-setup-start-time': setupStartTime !== null ? setupStartTime.toString() : null
+  })
 
   // シーン追加機能
   const addRangeScenes = () => {
@@ -307,7 +283,7 @@ function App() {
   }
 
   // リアルタイム更新のためのuseEffect
-  const [currentTime, setCurrentTime] = useState(Date.now())
+  const [, setCurrentTime] = useState(Date.now())
   
   useEffect(() => {
     const interval = setInterval(() => {
