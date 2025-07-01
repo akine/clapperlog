@@ -549,7 +549,7 @@ function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-            <div className="flex gap-3 mb-4">
+            <div className="flex flex-col gap-3 mb-4 sm:flex-row">
                 <Button
                   onClick={startSetup}
                   disabled={!selectedScene || isSettingUp || isRecording}
