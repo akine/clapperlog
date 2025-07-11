@@ -37,37 +37,42 @@ const APP_VERSION = __APP_VERSION__
 
 function App() {
   // 状態管理
+  // 撮影日の管理
+  const [shootingDates, setShootingDates] = useState(() => {
+    const saved = localStorage.getItem('shooting-app-dates')
+    return saved ? JSON.parse(saved) : ['2025-07-14']
+  })
+  const [activeDate, setActiveDate] = useState(() => {
+    const saved = localStorage.getItem('shooting-app-active-date')
+    return saved || null
+  })
+  const [newDate, setNewDate] = useState('')
+
+  const prefix = (key) => `shooting-app-${activeDate}-${key}`
+
   const [scenes, setScenes] = useState(() => {
-    const saved = localStorage.getItem('shooting-app-scenes')
-    return saved ? JSON.parse(saved) : []
+    return []
   })
   const [records, setRecords] = useState(() => {
-    const saved = localStorage.getItem('shooting-app-records')
-    return saved ? JSON.parse(saved) : []
+    return []
   })
   const [currentRecord, setCurrentRecord] = useState(() => {
-    const saved = localStorage.getItem('shooting-app-current-record')
-    return saved ? JSON.parse(saved) : null
+    return null
   })
   const [selectedScene, setSelectedScene] = useState(() => {
-    const saved = localStorage.getItem('shooting-app-selected-scene')
-    return saved || ''
+    return ''
   })
   const [isRecording, setIsRecording] = useState(() => {
-    const saved = localStorage.getItem('shooting-app-is-recording')
-    return saved === 'true'
+    return false
   })
   const [isPaused, setIsPaused] = useState(() => {
-    const saved = localStorage.getItem('shooting-app-is-paused')
-    return saved === 'true'
+    return false
   })
   const [isSettingUp, setIsSettingUp] = useState(() => {
-    const saved = localStorage.getItem('shooting-app-is-setting-up')
-    return saved === 'true'
+    return false
   })
   const [setupStartTime, setSetupStartTime] = useState(() => {
-    const saved = localStorage.getItem('shooting-app-setup-start-time')
-    return saved ? Number(saved) : null
+    return null
   })
   const [showAddScene, setShowAddScene] = useState(false)
   const [addMode, setAddMode] = useState('range')
@@ -80,17 +85,43 @@ function App() {
   const [showHearts, setShowHearts] = useState(false)
   const [showResetDialog, setShowResetDialog] = useState(false)
 
+  // 選択された撮影日のデータを読み込み
+  useEffect(() => {
+    if (!activeDate) return
+    const load = (key) => {
+      const val = localStorage.getItem(prefix(key))
+      return val ? JSON.parse(val) : []
+    }
+
+    setScenes(load('scenes'))
+    setRecords(load('records'))
+    const current = localStorage.getItem(prefix('current-record'))
+    setCurrentRecord(current ? JSON.parse(current) : null)
+    setSelectedScene(localStorage.getItem(prefix('selected-scene')) || '')
+    setIsRecording(localStorage.getItem(prefix('is-recording')) === 'true')
+    setIsPaused(localStorage.getItem(prefix('is-paused')) === 'true')
+    setIsSettingUp(localStorage.getItem(prefix('is-setting-up')) === 'true')
+    const setup = localStorage.getItem(prefix('setup-start-time'))
+    setSetupStartTime(setup ? Number(setup) : null)
+  }, [activeDate])
+
   // ローカルストレージへの保存（バッチ処理で最適化）
-  useLocalStorageBatch({
-    'shooting-app-scenes': scenes,
-    'shooting-app-records': records,
-    'shooting-app-current-record': currentRecord,
-    'shooting-app-selected-scene': selectedScene,
-    'shooting-app-is-recording': isRecording.toString(),
-    'shooting-app-is-paused': isPaused.toString(),
-    'shooting-app-is-setting-up': isSettingUp.toString(),
-    'shooting-app-setup-start-time': setupStartTime !== null ? setupStartTime.toString() : null
-  })
+  const storageData = {
+    'shooting-app-dates': shootingDates,
+    'shooting-app-active-date': activeDate,
+  }
+  if (activeDate) {
+    storageData[prefix('scenes')] = scenes
+    storageData[prefix('records')] = records
+    storageData[prefix('current-record')] = currentRecord
+    storageData[prefix('selected-scene')] = selectedScene
+    storageData[prefix('is-recording')] = isRecording.toString()
+    storageData[prefix('is-paused')] = isPaused.toString()
+    storageData[prefix('is-setting-up')] = isSettingUp.toString()
+    storageData[prefix('setup-start-time')] =
+      setupStartTime !== null ? setupStartTime.toString() : null
+  }
+  useLocalStorageBatch(storageData)
 
   // シーン追加機能
   const addRangeScenes = () => {
@@ -358,15 +389,31 @@ function App() {
     })
   }
 
+  const addDate = () => {
+    if (!newDate) return
+    if (!shootingDates.includes(newDate)) {
+      setShootingDates(prev => [...prev, newDate])
+    }
+    setNewDate('')
+  }
+
+  const exitDate = () => {
+    setActiveDate(null)
+  }
+
   const resetApp = () => {
-    localStorage.removeItem('shooting-app-scenes')
-    localStorage.removeItem('shooting-app-records')
-    localStorage.removeItem('shooting-app-current-record')
-    localStorage.removeItem('shooting-app-selected-scene')
-    localStorage.removeItem('shooting-app-is-recording')
-    localStorage.removeItem('shooting-app-is-paused')
-    localStorage.removeItem('shooting-app-is-setting-up')
-    localStorage.removeItem('shooting-app-setup-start-time')
+    if (!activeDate) return
+    const keys = [
+      'scenes',
+      'records',
+      'current-record',
+      'selected-scene',
+      'is-recording',
+      'is-paused',
+      'is-setting-up',
+      'setup-start-time',
+    ]
+    keys.forEach((k) => localStorage.removeItem(prefix(k)))
 
     setScenes([])
     setRecords([])
@@ -379,21 +426,64 @@ function App() {
     setShowResetDialog(false)
   }
 
+  if (!activeDate) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-white">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <img src="/undone_logo.svg" alt="UNDONE" className="w-12 h-12" />
+              <div className="flex items-center gap-3">
+                <Camera className="w-8 h-8 text-blue-600" />
+                <h1 className="text-4xl font-bold text-slate-800">撮影日選択</h1>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-4 mb-8">
+            {shootingDates.length === 0 && (
+              <p className="text-center text-slate-600">登録された撮影がありません</p>
+            )}
+            {shootingDates.map(date => (
+              <Button key={date} className="w-full justify-start" onClick={() => setActiveDate(date)}>
+                {date.replace(/-/g, '/')}
+              </Button>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="date"
+              value={newDate}
+              onChange={(e) => setNewDate(e.target.value)}
+              className="border rounded px-3 py-2 flex-1"
+            />
+            <Button onClick={addDate} className="bg-blue-600 hover:bg-blue-700 text-white">
+              撮影を登録する
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-white">
       <div className="container mx-auto px-4 py-8">
         {/* ヘッダーセクション */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-4 mb-4">
-            <img 
-              src="/undone_logo.svg" 
-              alt="UNDONE" 
+            <img
+              src="/undone_logo.svg"
+              alt="UNDONE"
               className="w-12 h-12"
             />
             <div className="flex items-center gap-3">
               <Camera className="w-8 h-8 text-blue-600" />
               <h1 className="text-4xl font-bold text-slate-800">撮影記録管理</h1>
             </div>
+          </div>
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={exitDate}>戻る</Button>
+            <span className="ml-4 text-slate-700 font-medium">{activeDate.replace(/-/g, '/')}</span>
           </div>
         </div>
 
