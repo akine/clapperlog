@@ -1,7 +1,7 @@
 {
   "name": "shooting-record-app",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.02",
   "type": "module",
   "scripts": {
     "dev": "vite",

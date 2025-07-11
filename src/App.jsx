@@ -411,6 +411,13 @@ function App() {
 
   const addDate = () => {
     if (!newDate) return
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const selected = new Date(newDate)
+    if (selected < today) {
+      alert('過去の日付は登録できません')
+      return
+    }
     if (!shootingDates.some(d => d.date === newDate)) {
       setShootingDates(prev => [
         ...prev,
@@ -476,6 +483,7 @@ function App() {
   }
 
   const deleteDate = (index) => {
+    if (!window.confirm('撮影日を削除しますか？')) return
     const item = shootingDates[index]
     const keys = [
       'scenes',
@@ -570,7 +578,7 @@ function App() {
                     <div className="flex justify-between w-full">
                       <span>{item.date.replace(/-/g, '/')}</span>
                       {item.title && (
-                        <span className="text-base text-slate-700 font-medium">{item.title}</span>
+                        <span className="text-base text-white font-medium">{item.title}</span>
                       )}
                     </div>
                   </Button>
@@ -603,6 +611,16 @@ function App() {
             </Button>
           </div>
         </div>
+        <footer className="relative text-center text-xs text-slate-500 py-4 space-y-2">
+          <div>
+            v.{APP_VERSION} - made by <span onClick={handleCreditTap}>Undone</span>
+          </div>
+          <span
+            className={`absolute left-1/2 -translate-x-1/2 -top-2 text-pink-500 transition-opacity duration-700 ${showHearts ? 'opacity-100' : 'opacity-0'}`}
+          >
+            {'\u2764\u2764\u2764\u2764\u2764'}
+          </span>
+        </footer>
       </div>
     )
   }
@@ -988,7 +1006,7 @@ function App() {
       </div>
       <footer className="relative text-center text-xs text-slate-500 py-4 space-y-2">
         <div>
-          v{APP_VERSION} - made by <span onClick={handleCreditTap}>Undone</span>
+          v.{APP_VERSION} - made by <span onClick={handleCreditTap}>Undone</span>
         </div>
         <span
           className={`absolute left-1/2 -translate-x-1/2 -top-2 text-pink-500 transition-opacity duration-700 ${showHearts ? 'opacity-100' : 'opacity-0'}`}
