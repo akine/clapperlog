@@ -6,6 +6,7 @@ import {
   Plus,
   Download,
   Trash2,
+  Pencil,
   Clock,
   Camera,
   MoreVertical,
@@ -61,8 +62,12 @@ function App() {
   })
   const [newDate, setNewDate] = useState('')
   const [newTitle, setNewTitle] = useState('')
+  const [editingIndex, setEditingIndex] = useState(null)
+  const [editDate, setEditDate] = useState('')
+  const [editTitle, setEditTitle] = useState('')
 
   const prefix = (key) => `shooting-app-${activeDate}-${key}`
+  const datePrefix = (date, key) => `shooting-app-${date}-${key}`
   const activeTitle = shootingDates.find(d => d.date === activeDate)?.title || ''
 
   const [scenes, setScenes] = useState(() => {
@@ -416,6 +421,79 @@ function App() {
     setNewTitle('')
   }
 
+  const startEditDate = (index) => {
+    const item = shootingDates[index]
+    setEditDate(item.date)
+    setEditTitle(item.title)
+    setEditingIndex(index)
+  }
+
+  const cancelEditDate = () => {
+    setEditingIndex(null)
+    setEditDate('')
+    setEditTitle('')
+  }
+
+  const moveStorage = (oldDate, newDate) => {
+    const keys = [
+      'scenes',
+      'records',
+      'current-record',
+      'selected-scene',
+      'is-recording',
+      'is-paused',
+      'is-setting-up',
+      'setup-start-time',
+    ]
+    keys.forEach((k) => {
+      const oldKey = datePrefix(oldDate, k)
+      const val = localStorage.getItem(oldKey)
+      if (val !== null) {
+        localStorage.setItem(datePrefix(newDate, k), val)
+        localStorage.removeItem(oldKey)
+      }
+    })
+  }
+
+  const saveEditDate = () => {
+    if (editingIndex === null) return
+    const oldItem = shootingDates[editingIndex]
+    const updated = { date: editDate, title: editTitle.trim() }
+    setShootingDates(prev => {
+      const copy = [...prev]
+      copy[editingIndex] = updated
+      return copy
+    })
+
+    if (oldItem.date !== editDate) {
+      moveStorage(oldItem.date, editDate)
+      if (activeDate === oldItem.date) {
+        setActiveDate(editDate)
+      }
+    }
+
+    cancelEditDate()
+  }
+
+  const deleteDate = (index) => {
+    const item = shootingDates[index]
+    const keys = [
+      'scenes',
+      'records',
+      'current-record',
+      'selected-scene',
+      'is-recording',
+      'is-paused',
+      'is-setting-up',
+      'setup-start-time',
+    ]
+    keys.forEach(k => localStorage.removeItem(datePrefix(item.date, k)))
+    setShootingDates(prev => prev.filter((_, i) => i !== index))
+    if (activeDate === item.date) {
+      setActiveDate(null)
+    }
+  }
+
   const exitDate = () => {
     setActiveDate(null)
   }
@@ -462,19 +540,48 @@ function App() {
             {shootingDates.length === 0 && (
               <p className="text-center text-slate-600">登録された撮影がありません</p>
             )}
-            {shootingDates.map(item => (
-              <Button
-                key={item.date}
-                className="w-full justify-start"
-                onClick={() => setActiveDate(item.date)}
-              >
-                <div className="flex justify-between w-full">
-                  <span>{item.date.replace(/-/g, '/')}</span>
-                  {item.title && (
-                    <span className="text-sm text-slate-500">{item.title}</span>
-                  )}
+            {shootingDates.map((item, index) => (
+              editingIndex === index ? (
+                <div key={index} className="flex gap-2">
+                  <input
+                    type="date"
+                    value={editDate}
+                    onChange={(e) => setEditDate(e.target.value)}
+                    className="border rounded px-3 py-2 flex-1"
+                  />
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="border rounded px-3 py-2 flex-1"
+                    placeholder="タイトル"
+                  />
+                  <Button size="sm" onClick={saveEditDate} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    保存
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={cancelEditDate}>キャンセル</Button>
                 </div>
-              </Button>
+              ) : (
+                <div key={item.date} className="flex gap-2 items-center">
+                  <Button
+                    className="flex-1 justify-start"
+                    onClick={() => setActiveDate(item.date)}
+                  >
+                    <div className="flex justify-between w-full">
+                      <span>{item.date.replace(/-/g, '/')}</span>
+                      {item.title && (
+                        <span className="text-base text-slate-700 font-medium">{item.title}</span>
+                      )}
+                    </div>
+                  </Button>
+                  <Button variant="outline" size="icon" onClick={() => startEditDate(index)}>
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button variant="outline" size="icon" onClick={() => deleteDate(index)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              )
             ))}
           </div>
           <div className="flex gap-2">
