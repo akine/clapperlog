@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabaseClient.js'
+import AuthForm from '@/components/auth/AuthForm.jsx'
 import {
   Play,
   Pause,
@@ -37,25 +39,35 @@ import './App.css'
 const APP_VERSION = __APP_VERSION__
 
 function App() {
+  const [session, setSession] = useState(null)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+    })
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+    return () => listener.subscription.unsubscribe()
+  }, [])
   // 状態管理
   // 撮影日の管理
-  const [shootingDates, setShootingDates] = useState(() => {
-    const saved = localStorage.getItem('shooting-app-dates')
-    if (!saved) return []
-    try {
-      const parsed = JSON.parse(saved)
-      if (Array.isArray(parsed)) {
-        // 旧形式のサポート (string のみ)
-        if (parsed.length > 0 && typeof parsed[0] === 'string') {
-          return parsed.map(date => ({ date, title: '' }))
-        }
-        return parsed
+  const [shootingDates, setShootingDates] = useState([])
+
+  useEffect(() => {
+    if (!session) return
+    const fetchDates = async () => {
+      const { data, error } = await supabase
+        .from('shooting_dates')
+        .select('id, date, title')
+        .eq('user_id', session.user.id)
+        .order('date')
+      if (!error && data) {
+        setShootingDates(data.map(d => ({ id: d.id, date: d.date, title: d.title })))
       }
-    } catch {
-      // ignore parse error
     }
-    return []
-  })
+    fetchDates()
+  }, [session])
   const [activeDate, setActiveDate] = useState(() => {
     const saved = localStorage.getItem('shooting-app-active-date')
     return saved || null
@@ -409,7 +421,7 @@ function App() {
     })
   }
 
-  const addDate = () => {
+  const addDate = async () => {
     if (!newDate) return
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -419,10 +431,17 @@ function App() {
       return
     }
     if (!shootingDates.some(d => d.date === newDate)) {
-      setShootingDates(prev => [
-        ...prev,
-        { date: newDate, title: newTitle.trim() }
-      ])
+      const { data, error } = await supabase
+        .from('shooting_dates')
+        .insert({ user_id: session.user.id, date: newDate, title: newTitle.trim() })
+        .select()
+        .single()
+      if (!error && data) {
+        setShootingDates(prev => [
+          ...prev,
+          { id: data.id, date: data.date, title: data.title }
+        ])
+      }
     }
     setNewDate('')
     setNewTitle('')
@@ -462,15 +481,21 @@ function App() {
     })
   }
 
-  const saveEditDate = () => {
+  const saveEditDate = async () => {
     if (editingIndex === null) return
     const oldItem = shootingDates[editingIndex]
     const updated = { date: editDate, title: editTitle.trim() }
-    setShootingDates(prev => {
-      const copy = [...prev]
-      copy[editingIndex] = updated
-      return copy
-    })
+    const { error } = await supabase
+      .from('shooting_dates')
+      .update(updated)
+      .eq('id', oldItem.id)
+    if (!error) {
+      setShootingDates(prev => {
+        const copy = [...prev]
+        copy[editingIndex] = { ...oldItem, ...updated }
+        return copy
+      })
+    }
 
     if (oldItem.date !== editDate) {
       moveStorage(oldItem.date, editDate)
@@ -482,7 +507,7 @@ function App() {
     cancelEditDate()
   }
 
-  const deleteDate = (index) => {
+  const deleteDate = async (index) => {
     if (!window.confirm('撮影日を削除しますか？')) return
     const item = shootingDates[index]
     const keys = [
@@ -496,7 +521,13 @@ function App() {
       'setup-start-time',
     ]
     keys.forEach(k => localStorage.removeItem(datePrefix(item.date, k)))
-    setShootingDates(prev => prev.filter((_, i) => i !== index))
+    const { error } = await supabase
+      .from('shooting_dates')
+      .delete()
+      .eq('id', item.id)
+    if (!error) {
+      setShootingDates(prev => prev.filter((_, i) => i !== index))
+    }
     if (activeDate === item.date) {
       setActiveDate(null)
     }
@@ -504,6 +535,14 @@ function App() {
 
   const exitDate = () => {
     setActiveDate(null)
+  }
+
+  const signOut = () => {
+    supabase.auth.signOut()
+  }
+
+  if (!session) {
+    return <AuthForm onAuth={setSession} />
   }
 
   const resetApp = () => {
@@ -536,11 +575,14 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-white">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <img src="/undone_logo.svg" alt="UNDONE" className="w-12 h-12" />
-              <div className="flex items-center gap-3">
-                <Camera className="w-8 h-8 text-blue-600" />
-                <h1 className="text-4xl font-bold text-slate-800">撮影日選択</h1>
+            <div className="flex items-center justify-between mb-4">
+              <button onClick={signOut} className="text-sm text-blue-600">Sign Out</button>
+              <div className="flex items-center gap-4">
+                <img src="/undone_logo.svg" alt="UNDONE" className="w-12 h-12" />
+                <div className="flex items-center gap-3">
+                  <Camera className="w-8 h-8 text-blue-600" />
+                  <h1 className="text-4xl font-bold text-slate-800">撮影日選択</h1>
+                </div>
               </div>
             </div>
           </div>
@@ -630,7 +672,9 @@ function App() {
       <div className="container mx-auto px-4 py-8">
         {/* ヘッダーセクション */}
         <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-4 mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <button onClick={signOut} className="text-sm text-blue-600">Sign Out</button>
+            <div className="flex items-center gap-4">
             <img
               src="/undone_logo.svg"
               alt="UNDONE"
@@ -639,6 +683,7 @@ function App() {
             <div className="flex items-center gap-3">
               <Camera className="w-8 h-8 text-blue-600" />
               <h1 className="text-4xl font-bold text-slate-800">撮影記録管理</h1>
+            </div>
             </div>
           </div>
           <div className="flex justify-end">

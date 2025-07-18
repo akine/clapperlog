@@ -8,6 +8,7 @@
 - 🔢 **シーン管理**: 連番登録 (例: `s01~s05`) やカスタムシーンの追加
 - 📊 **CSV 出力**: 撮影履歴をワンクリックでダウンロード
 - 💾 **ローカル保存**: すべてのデータはブラウザのローカルストレージに保存
+- ☁️ **クラウド保存**: Supabase によるユーザー認証とデータ永続化
 - 📱 **レスポンシブ対応**: モバイルでもデスクトップでも快適に利用可能
 
 ## セットアップ
@@ -26,9 +27,21 @@ cd clapperlog
 pnpm install   # npm install / yarn install でも可
 ```
 
+### 環境変数の設定
+プロジェクトルートに `.env` ファイルを作成します。サンプルとして `.env.example` が含まれているのでコピーして利用してください。
+
+```bash
+cp .env.example .env
+```
+`.env` には Supabase の URL と anon key を設定します。
+
+### データベースセットアップ
+`supabase/schema.sql` を Supabase プロジェクトに適用してテーブルを作成します。
+
 ### 開発サーバーの起動
 ```bash
 pnpm run dev   # npm run dev / yarn dev
+# `.env` に Supabase のキーを設定してから起動してください
 ```
 ブラウザで [http://localhost:5173](http://localhost:5173) を開きます。
 
