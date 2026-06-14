@@ -44,7 +44,7 @@ pnpm run preview  # npm run preview / yarn preview
 ```
 clapperlog/
 ├── public/              # 静的ファイル
-│   └── undone_logo.svg
+│   └── vite.svg
 ├── src/                 # ソースコード
 │   ├── components/      # UI コンポーネント
 │   ├── assets/          # 画像など
@@ -66,5 +66,5 @@ clapperlog/
 - **Lucide React** アイコン
 
 ---
-**開発者**: 合同会社Undone
+**開発者**: akinechan
 **最終更新**: 2025年6月8日

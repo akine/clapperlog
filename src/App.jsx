@@ -537,7 +537,6 @@ function App() {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-4 mb-4">
-              <img src="/undone_logo.svg" alt="UNDONE" className="w-12 h-12" />
               <div className="flex items-center gap-3">
                 <Camera className="w-8 h-8 text-blue-600" />
                 <h1 className="text-4xl font-bold text-slate-800">撮影日選択</h1>
@@ -613,7 +612,7 @@ function App() {
         </div>
         <footer className="relative text-center text-xs text-slate-500 py-4 space-y-2">
           <div>
-            v.{APP_VERSION} - made by <span onClick={handleCreditTap}>Undone</span>
+            v.{APP_VERSION} - made by <span onClick={handleCreditTap}>akinechan</span>
           </div>
           <span
             className={`absolute left-1/2 -translate-x-1/2 -top-2 text-pink-500 transition-opacity duration-700 ${showHearts ? 'opacity-100' : 'opacity-0'}`}
@@ -631,11 +630,6 @@ function App() {
         {/* ヘッダーセクション */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-4 mb-4">
-            <img
-              src="/undone_logo.svg"
-              alt="UNDONE"
-              className="w-12 h-12"
-            />
             <div className="flex items-center gap-3">
               <Camera className="w-8 h-8 text-blue-600" />
               <h1 className="text-4xl font-bold text-slate-800">撮影記録管理</h1>
@@ -1006,7 +1000,7 @@ function App() {
       </div>
       <footer className="relative text-center text-xs text-slate-500 py-4 space-y-2">
         <div>
-          v.{APP_VERSION} - made by <span onClick={handleCreditTap}>Undone</span>
+          v.{APP_VERSION} - made by <span onClick={handleCreditTap}>akinechan</span>
         </div>
         <span
           className={`absolute left-1/2 -translate-x-1/2 -top-2 text-pink-500 transition-opacity duration-700 ${showHearts ? 'opacity-100' : 'opacity-0'}`}
